@@ -26,11 +26,11 @@
 
 
 //personal libraries
-#include "stringlib.h"
-#include "c_ins_queue.h"
-#include "fiohelpers.h"
-#include "SimpleTimer.h"
-#include "oslib.h"
+#include "lib/stringlib.h"
+#include "lib/c_ins_queue.h"
+#include "util/fiohelpers.h"
+#include "util/SimpleTimer.h"
+#include "lib/oslib.h"
 
 
 //Global Constants & Structs//////////////////////////////////////
@@ -123,126 +123,3 @@ int main(int argc, char* argv[])
 
 //Function Defitions////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
-/*
-int loadProgData(char* filepath, insQueue* destQ)
-   {
-    //variables
-    FILE* mdatF = NULL; //meta-data file ptr
-    char* buffer;
-
-    char* line = NULL;
-    char* token = NULL;
-    char* insTok = NULL;
-    char** tokens; //make these string vectors
-    char** lines;  //make this a string vector
-
-    char comp;
-    char descrip[STATICSIZE];
-    int cycles;    
-
-    int maxSize;
-    int lineCnt = 0;
-    int insCnt = 0;
-    int tCnt;    
-
-    instruction tmpIns; //temporary instruction buffer for loading ins into q    
-    insQueue tmpQ;
-    
-
-
-    //allocate space to all strings requiring it
-    alloStr(&buffer, STATICSIZE);
-    
-    constructQueue(&tmpQ);
-
-
-
-
-    mdatF = fopen(filepath, "r");
-    if(mdatF == NULL)
-       {
-        perror("The following error occurred");
-        return ERROR;
-       }
-
-
- 
-    //load up beginning line as garbage
-    fGetToDelim(mdatF, &buffer, "\n");
-    clearStr(&buffer);
-
-    //load up all subseuent lines
-    fGetToDelim(mdatF, &buffer, ".");    
-    
-    //priming loop to parse all instuctions 
-    // into individual lines
-    line = strtok(buffer, "\n");
-    while(line != NULL)
-       {
-        strcpy(lines[lineCnt], line);
-        
-        line = strtok(NULL, "\n");
-        lineCnt++;
-       }
- 
-
-    //dellocate buffer
-    free(buffer);
-
-    //parse lines into idividual intructions
-    // by tokenizing up to ";" and remove leading spaces    
-    for(tCnt = 0; tCnt < lineCnt; tCnt++)
-       {
-        insTok = strtok(lines[tCnt],";");
-        while(insTok != NULL)
-           {
-            if(insTok[0] == ' ')
-               {
-                removeLeadingSpace(&insTok);
-               }
-
-            //detects if our current token is a valid instruction
-            // we want to store
-            if( isalpha(insTok[0]) )
-               {
-                strcpy(tokens[insCnt], insTok);
-                insCnt++;
-               }
-
-            insTok = strtok(NULL,";");
-           }
-       }
-
-    //final pass of parsing
-
-    // remove each instruction from its token array
-    // and parse into it's component parts to load into
-    // a temporary instruction
-
-    for(tCnt = 0; tCnt < insCnt; tCnt++)
-       {
-
-        //parse out component char
-        token = strtok(tokens[tCnt], "(");
-        comp = token[0];
-        
-        //parse out descriptor
-        token = strtok(NULL, ")");
-        strcpy(descrip, token);
-
-        //parse out cycles
-        token = strtok(NULL, " ");
-        
-        cycles = atoi(token);       
-        
-        tmpIns = loadInstruction(comp, descrip, cycles);
-        
-        enqueue(&tmpQ, tmpIns); 
-       }
-
-    //assign our destination queue
-    // to our temporary queue
-    *destQ = tmpQ;
-
-   }
-*/

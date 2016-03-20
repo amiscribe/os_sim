@@ -17,12 +17,12 @@
   */
 
 
-#include "stringlib.h"
+#include "./stringlib.h"
 #include <stdio.h>
-#include "c_ins_queue.h"
-#include "stringvect.h"
+#include "./c_ins_queue.h"
+#include "./stringvect.h"
 #include <pthread.h>
-#include "SimpleTimer.h"
+#include "../util/SimpleTimer.h"
 
 #ifndef OSLIB_H
 #define OSLIB_H

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
-#include "c_ins_queue.h"
-#include "oslib.h"
+#include "lib/c_ins_queue.h"
+#include "lib/oslib.h"
 
 const char* ENDOFSET = "A(end)0";
 const char* ENDOFSETS = "S(end)0";

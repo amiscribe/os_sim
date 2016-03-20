@@ -1,4 +1,5 @@
-
+#include <stdio.h>
+#include "../lib/oslib.h"
 
 const char* ENDOFSET = "A(end)0";
 const char* ENDOFSETS = "S(end)0";
