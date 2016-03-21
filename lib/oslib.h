@@ -84,6 +84,7 @@ struct OS
     float timeAcc;
     char* logFile;
     trilog logTo;
+    strVect runtimeLog;            //log of simulator activity
    };
 
 
@@ -92,9 +93,8 @@ struct PCB
    {
     state_t pState;               //process state
     int pid;                      //process id number
-    insQueue instructions;       //instruction queue
+    insQueue instructions;        //instruction queue
     float time;                   //time active
-    strVect processLog;            //log of process activity
    };
 
 
@@ -109,7 +109,6 @@ int constructPCB(PCB *self, const insQueue *instr, int pid)
     self->pid = pid;
     self->instructions = queueCopy(instr);
     self->time = 0.0;
-    constructVect(&(self->processLog), 10);
 
     return 1;
    }
@@ -127,7 +126,22 @@ void constructOS(OS* self)
     self->timeAcc = 0.0;
     self->logFile = NULL;
     self->logTo = MONITOR; 
+    constructVect(&(self->runtimeLog), 10);
    }
+
+//Destructors/////////////////////////////////////////
+/////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+//Utilities////////////////////////////////////////////
+//////////////////////////////////////////////////////
+
 
 //mysleep
 void mysleep(int msec)
@@ -246,21 +260,40 @@ PCB pcbCopy(const PCB *origin)
     PCB newPCB;
 
     constructPCB(&newPCB, &(origin->instructions), origin->pid);
-
     
     newPCB.pState = origin->pState;
     newPCB.time = origin->time;
-    copyStrVect(&(newPCB.processLog), &(origin->processLog));
 
     return newPCB;
    }
 
 
 
+/*
+ * @brief get current total runtime of process
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ */
+void getPresentRuntime(float *runtime)
+   {
+    //variables
+    SimpleTimer timer;
+    char* timeStr;
 
+    alloStr(&timeStr, 10);
 
-//PROCESS HANDLERS//////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////
+    start(&timer);
+    stop(&timer);
+
+    getElapsedTime(&timeStr, &timer);
+
+    *runtime += atof(timeStr);
+   }
 
 int getWaitTime(const OS* sysNfo, const instruction *ins)
    {
@@ -295,7 +328,70 @@ int getWaitTime(const OS* sysNfo, const instruction *ins)
        }
    }
 
+char* formatInstruction(int processId, float runTime, const instruction* insNfo, int start)
+   {
+    //variables
+    char* formatBuff;
+    char* intBuff;
 
+    //allocate string space
+    alloStr(&formatBuff, 60);
+    alloStr(&intBuff, 5);
+
+    //setup
+    sprintf(intBuff,"%d",processId);
+
+    //do strcats
+    strcat(formatBuff, ftoa(runTime));
+    strcat(formatBuff, " - Process ");
+    strcat(formatBuff, intBuff);
+    strcat(formatBuff, ": ");
+  
+    if(start == 1)
+       {
+        strcat(formatBuff, "start ");
+       }
+    else  
+       {
+        strcat(formatBuff, "end ");
+       }
+
+    strcat(formatBuff, insNfo->descriptor);
+
+    strcat(formatBuff, " ");
+
+    switch(insNfo->component)
+       {
+        case 'A': //processing
+          strcat(formatBuff, "action");
+          break;
+        case 'I': //input
+          strcat(formatBuff, "input");
+          break;
+        case 'O': //output
+          strcat(formatBuff, "output");
+          break;
+       }
+   
+    free(intBuff);
+
+    return formatBuff;
+   
+   }
+
+
+//Runtime Handlers//////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+/*
+ * Process one instruction
+ *
+ *
+ *
+ *
+ *
+ */
 
 int processInstruction(const OS* sysNfo, const instruction* pIns, float *runTime)
    {
@@ -372,13 +468,40 @@ int processInstruction(const OS* sysNfo, const instruction* pIns, float *runTime
 
   else if(pIns->component == 'A')
      {
-      
-
+      getPresentRuntime(runTime);  
      }   
 
 
 >>>>>>> modossim
    }
+
+/*
+ * @brief handles the instructions of one PCB
+ *
+ *
+ *
+ *
+ *
+ */
+void runPCB(OS* sysNfo, PCB* loadedPCB, float *runTime)
+   {
+    //variables
+    char* formatOut;
+
+    
+    //construct
+    alloStr(&formatOut, 60);
+
+    
+    //while we still have instructions to process
+    
+      //log start instruction
+  
+      //process insctuction
+  
+      //log stop instruction
+  }
+
 
 
 #endif /*pcblib.h*/
