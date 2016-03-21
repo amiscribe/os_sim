@@ -129,6 +129,23 @@ void constructOS(OS* self)
     self->logTo = MONITOR; 
    }
 
+//personal sleep function
+//works off clock time
+void mysleep(int msec)
+   {
+    //variables
+    clock_t begin;
+    int seconds = msec*1000;
+    
+    //set up clock
+    begin = clock();
+
+    //wait for required amount of time
+    while(clock()-begin < seconds){};
+
+   }
+
+
 
 //process to be called by pthread
 // create()
@@ -318,6 +335,19 @@ int processInstruction(const OS* sysNfo, const instruction* pIns, float *runTime
         getElapsedTime(&timeStr ,&runTimer);
 
         puts(timeStr);
+       }
+    else if(pIns->component == 'P')
+       {
+        start(&runTimer);
+        mySleep(waitTime); 
+        stop(&runTimer);        
+        
+        getElapsedTime(&timeStr ,&runTimer);
+        puts(timeStr);
+       }
+    else if(pIns->component == 'A')
+       {
+
        }
    }
 
