@@ -129,18 +129,18 @@ void constructOS(OS* self)
     self->logTo = MONITOR; 
    }
 
-//personal sleep function
-//works off clock time
+//mysleep
 void mysleep(int msec)
    {
     //variables
+    int seconds;
     clock_t begin;
-    int seconds = msec*1000;
-    
-    //set up clock
+
+    //set up 
+    seconds = msec * 1000;
     begin = clock();
 
-    //wait for required amount of time
+    //sleep
     while(clock()-begin < seconds){};
 
    }
@@ -152,19 +152,15 @@ void mysleep(int msec)
 void* runner(void* param)
    {
     //variables
-    int *secWait;
+    int *msecWait;
     clock_t begin;
 
     //set up secWait
-    secWait = (int*) param;
-    *secWait *= 1000;
-    
-    //set up clock
-    begin = clock();
+    msecWait = (int*) param;
+   
+    //call mysleep
+    mysleep(*msecWait);
 
-    //wait for required amount of time
-    while(clock()-begin < *secWait){};
-    
     //exit
     pthread_exit(0);
 
@@ -334,8 +330,13 @@ int processInstruction(const OS* sysNfo, const instruction* pIns, float *runTime
 
         getElapsedTime(&timeStr ,&runTimer);
 
+        *runTime += atof(timeStr);
+
+        timeStr = ftoa(*runTime);
+
         puts(timeStr);
        }
+<<<<<<< HEAD
     else if(pIns->component == 'P')
        {
         start(&runTimer);
@@ -349,6 +350,34 @@ int processInstruction(const OS* sysNfo, const instruction* pIns, float *runTime
        {
 
        }
+=======
+   else if(pIns->component == 'P')
+      {
+       //start timer
+       start(&runTimer);
+       
+       //sleep
+       mysleep(waitTime);
+
+       //cleanup
+       stop(&runTimer);
+       getElapsedTime(&timeStr, &runTimer);
+
+       *runTime += atof(timeStr);
+
+       timeStr = ftoa(*runTime);
+       
+       puts(timeStr);
+      }
+
+  else if(pIns->component == 'A')
+     {
+      
+
+     }   
+
+
+>>>>>>> modossim
    }
 
 
