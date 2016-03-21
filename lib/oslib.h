@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include "./c_ins_queue.h"
 #include "./stringvect.h"
+
 #include <pthread.h>
 #include "../util/SimpleTimer.h"
 
@@ -282,7 +283,7 @@ int getWaitTime(const OS* sysNfo, const instruction *ins)
    }
 
 
-/*
+
 int processInstruction(const OS* sysNfo, const instruction* pIns, float *runTime)
    {
     //variables
@@ -294,7 +295,7 @@ int processInstruction(const OS* sysNfo, const instruction* pIns, float *runTime
     
 
     //construct variables
-    makeTimer(&runTimer);
+    makeSimpleTimer(&runTimer);
     alloStr(&timeStr, 10);
     
 
@@ -320,5 +321,5 @@ int processInstruction(const OS* sysNfo, const instruction* pIns, float *runTime
        }
    }
 
-*/
+
 #endif /*pcblib.h*/
