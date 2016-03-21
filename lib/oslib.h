@@ -129,25 +129,38 @@ void constructOS(OS* self)
     self->logTo = MONITOR; 
    }
 
+//mysleep
+void mysleep(int msec)
+   {
+    //variables
+    int seconds;
+    clock_t begin;
+
+    //set up 
+    seconds = msec * 1000;
+    begin = clock();
+
+    //sleep
+    while(clock()-begin < seconds){};
+
+   }
+
+
 
 //process to be called by pthread
 // create()
 void* runner(void* param)
    {
     //variables
-    int *secWait;
+    int *msecWait;
     clock_t begin;
 
     //set up secWait
-    secWait = (int*) param;
-    *secWait *= 1000;
-    
-    //set up clock
-    begin = clock();
+    msecWait = (int*) param;
+   
+    //call mysleep
+    mysleep(*msecWait);
 
-    //wait for required amount of time
-    while(clock()-begin < *secWait){};
-    
     //exit
     pthread_exit(0);
 
@@ -317,8 +330,38 @@ int processInstruction(const OS* sysNfo, const instruction* pIns, float *runTime
 
         getElapsedTime(&timeStr ,&runTimer);
 
+        *runTime += atof(timeStr);
+
+        timeStr = ftoa(*runTime);
+
         puts(timeStr);
        }
+   else if(pIns->component == 'P')
+      {
+       //start timer
+       start(&runTimer);
+       
+       //sleep
+       mysleep(waitTime);
+
+       //cleanup
+       stop(&runTimer);
+       getElapsedTime(&timeStr, &runTimer);
+
+       *runTime += atof(timeStr);
+
+       timeStr = ftoa(*runTime);
+       
+       puts(timeStr);
+      }
+
+  else if(pIns->component == 'A')
+     {
+      
+
+     }   
+
+
    }
 
 

@@ -14,10 +14,16 @@ int main(int argC, char* argv[]){
     constructOS(&opSys);
     constructIns(&output);
 
-    output = loadInstruction('I',"monitor", 20);
+    output = loadInstruction('P',"run", 20);
     configOS(&opSys, "config.cnf");
     
+
     processInstruction(&opSys, &output, &f);
 
+    output = loadInstruction('O',"hard drive", 20);
+    processInstruction(&opSys, &output, &f);
+
+    output = loadInstruction('I',"keyboard", 30);
+    processInstruction(&opSys, &output, &f);
     return 0;
 }
