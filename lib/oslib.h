@@ -359,8 +359,14 @@ char* formatInstruction(int processId, float runTime, const instruction* insNfo,
         strcat(formatBuff, "end ");
        }
 
-    strcat(formatBuff, insNfo->descriptor);
-
+    if(insNfo->component == 'A')
+       {
+        strcat(formatBuff, "processing");
+       }
+    else
+       {
+        strcat(formatBuff, insNfo->descriptor);
+       }
     strcat(formatBuff, " ");
 
     switch(insNfo->component)
