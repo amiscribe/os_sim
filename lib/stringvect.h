@@ -9,6 +9,7 @@ struct strVect
    {
     char** vect;
     int max;
+    int size;
    };
 
 
@@ -35,10 +36,11 @@ char** allocateEmpStrArr(int size)
 
 
 
-void constructVect(strVect *self, int size)
+void constructVect(strVect *self, int seed)
    {
-    self->max = size;
-    self->vect = allocateEmpStrArr(size);   
+    self->max = seed;
+    self->vect = allocateEmpStrArr(seed);
+    self->size = 0;
    }
 
 
@@ -76,5 +78,39 @@ void copyStrVect(strVect* dest, const strVect* source)
        }
    }
 
+//queue functionality
+
+void sv_enqueue(strVect *self, const char* string)
+   {
+    
+    //use insert at ndx and iterate size member
+    insAtNdx(self, string, self->size);
+    self->size++;
+    
+   }
+
+int sv_dequeue(strVect *self, char** returnStr)
+   {
+    //variable
+    int shiftNdx;
+
+    //empty queue
+    if(self->size == 0)
+       {
+        return 0;
+       }
+  
+    //remove first item
+    strcpy(*returnStr, self->vect[0]);
+    
+    //walk array forward
+    for(shiftNdx = 0; shiftNdx + 1 < self->size; shiftNdx++)
+       {
+        strCpy(&(self->vect[shiftNdx]), self->vect[shiftNdx+1]);
+       }
+
+    self->size--;
+    return 1;
+   }
 
 #endif

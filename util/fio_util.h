@@ -86,7 +86,8 @@ int getProgram(insQueue *programQ, FILE* fin)
     return 1;
     
    }
-int processmdf(char* fpath)
+
+int processmdf(/*insert pcbvect here,*/ char* fpath)
    {
     //variables
     FILE* mdfFile;

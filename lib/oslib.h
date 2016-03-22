@@ -386,21 +386,22 @@ char* formatInstruction(int processId, float runTime, const instruction* insNfo,
 void outputHandler(OS* opSys, char* output)
    {
     //variables
-    
+     
     
     //output based on three conditions
     switch(opSys->logTo)
        {
         case MONITOR:
         //output to monitor
+            puts(output);
             break;
         case FOUT:
         //insert to log
-        //add pop to stringvect
+            sv_enqueue(&(opSys->runtimeLog), output);
             break;
         case BOTH:
-        //output to monitor
-        //insert to log
+            puts(output);
+            sv_enqueue(&(opSys->runtimeLog), output);
             break;
        }
    }
@@ -487,7 +488,7 @@ int processInstruction(const OS* sysNfo, const instruction* pIns, float *runTime
  *
  *
  */
-void runPCB(OS* sysNfo, PCB* loadedPCB, float *runTime)
+void runPCB(OS* opSys, PCB* loadedPCB, float *runTime)
    {
     //variables
     char* formatOut;
@@ -502,9 +503,14 @@ void runPCB(OS* sysNfo, PCB* loadedPCB, float *runTime)
         //log start instruction
         getPresentRuntime(runTime);
         formatOut = formatInstruction(loadedPCB->pid, *runTime, &buffer, START);
+        outputHandler(opSys, formatOut);
+
         //process insctuction
-  
+        processInstruction(opSys, &buffer, runTime);
+        
         //log stop instruction
+        formatOut = formatInstruction(loadedPCB->pid, *runTime, &buffer, END);
+        outputHandler(opSys, formatOut);
        }
   }
 
