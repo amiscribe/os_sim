@@ -10,6 +10,7 @@ int main(int argC, char* argv[]){
     OS opSys;
     instruction output;
     float f = 0.0;
+    char* s;
 
     constructOS(&opSys);
     constructIns(&output);
@@ -17,13 +18,21 @@ int main(int argC, char* argv[]){
     output = loadInstruction('P',"run", 20);
     configOS(&opSys, "config.cnf");
     
-
+    
     processInstruction(&opSys, &output, &f);
 
     output = loadInstruction('O',"hard drive", 20);
+    
+    getPresentRuntime(&f); 
+    s = formatInstruction(1, f, &output, 1);
+    puts(s);
     processInstruction(&opSys, &output, &f);
-
+    s = formatInstruction(1, f, &output, 0);
+    puts(s);
+    
     output = loadInstruction('I',"keyboard", 30);
     processInstruction(&opSys, &output, &f);
+
+    
     return 0;
 }

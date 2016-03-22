@@ -42,6 +42,9 @@ const int KBCYCTIME = 7;
 const int LOGTO = 8;
 const int LOGPATH = 9;
 
+const int START = 1;
+const int END = 0;
+
 //forward declarations
 typedef enum state_t state_t;
 typedef enum trilog trilog;
@@ -347,7 +350,7 @@ char* formatInstruction(int processId, float runTime, const instruction* insNfo,
     strcat(formatBuff, intBuff);
     strcat(formatBuff, ": ");
   
-    if(start == 1)
+    if(start == START)
        {
         strcat(formatBuff, "start ");
        }
@@ -380,6 +383,27 @@ char* formatInstruction(int processId, float runTime, const instruction* insNfo,
    }
 
 
+void outputHandler(OS* opSys, char* output)
+   {
+    //variables
+    
+    
+    //output based on three conditions
+    switch(opSys->logTo)
+       {
+        case MONITOR:
+        //output to monitor
+            break;
+        case FOUT:
+        //insert to log
+        //add pop to stringvect
+            break;
+        case BOTH:
+        //output to monitor
+        //insert to log
+            break;
+       }
+   }
 //Runtime Handlers//////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -429,10 +453,9 @@ int processInstruction(const OS* sysNfo, const instruction* pIns, float *runTime
         *runTime += atof(timeStr);
 
         timeStr = ftoa(*runTime);
-
-        puts(timeStr);
        }
-   else if(pIns->component == 'P')
+    
+    else if(pIns->component == 'P')
       {
        //start timer
        start(&runTimer);
@@ -447,11 +470,9 @@ int processInstruction(const OS* sysNfo, const instruction* pIns, float *runTime
        *runTime += atof(timeStr);
 
        timeStr = ftoa(*runTime);
-       
-       puts(timeStr);
       }
 
-  else if(pIns->component == 'A')
+    else if(pIns->component == 'A')
      {
       getPresentRuntime(runTime);  
      }   
@@ -470,19 +491,21 @@ void runPCB(OS* sysNfo, PCB* loadedPCB, float *runTime)
    {
     //variables
     char* formatOut;
-
+    instruction buffer;
     
     //construct
-    alloStr(&formatOut, 60);
+    constructIns(&buffer);
 
-    
     //while we still have instructions to process
-    
-      //log start instruction
+    while( dequeue(&(loadedPCB->instructions), &buffer)  )
+       { 
+        //log start instruction
+        getPresentRuntime(runTime);
+        formatOut = formatInstruction(loadedPCB->pid, *runTime, &buffer, START);
+        //process insctuction
   
-      //process insctuction
-  
-      //log stop instruction
+        //log stop instruction
+       }
   }
 
 

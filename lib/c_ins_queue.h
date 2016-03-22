@@ -149,14 +149,16 @@ int dequeue(insQueue *self, instruction *returned)
 
     if(isEmpty(*self))
        {
-        return ERROR;
+        return FALSE;
        }
+    
     else if(self->front == self->rear)
        {
         copyInstruction(returned, (self->front)->ins);
         free(self->front);
         self->front = self->rear = NULL;
        }    
+    
     else
        {
         copyInstruction(returned, (self->front)->ins);
