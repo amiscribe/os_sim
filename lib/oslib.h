@@ -432,21 +432,6 @@ int processInstruction(const OS* sysNfo, const instruction* pIns, float *runTime
 
         puts(timeStr);
        }
-<<<<<<< HEAD
-    else if(pIns->component == 'P')
-       {
-        start(&runTimer);
-        mySleep(waitTime); 
-        stop(&runTimer);        
-        
-        getElapsedTime(&timeStr ,&runTimer);
-        puts(timeStr);
-       }
-    else if(pIns->component == 'A')
-       {
-
-       }
-=======
    else if(pIns->component == 'P')
       {
        //start timer
@@ -471,8 +456,6 @@ int processInstruction(const OS* sysNfo, const instruction* pIns, float *runTime
       getPresentRuntime(runTime);  
      }   
 
-
->>>>>>> modossim
    }
 
 /*
