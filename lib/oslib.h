@@ -97,7 +97,7 @@ struct PCB
     state_t pState;               //process state
     int pid;                      //process id number
     insQueue instructions;        //instruction queue
-    float time;                   //time active
+    int time;                     //total runtime for SJF and SRJF org
    };
 
 
@@ -111,7 +111,7 @@ int constructPCB(PCB *self, const insQueue *instr, int pid)
     self->pState = NEW;
     self->pid = pid;
     self->instructions = queueCopy(instr);
-    self->time = 0.0;
+    self->time = 0;
 
     return 1;
    }
