@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "../lib/pcbqueue.h"
 #include "../lib/oslib.h"
 
 const char* ENDOFSET = "A(end)0";
@@ -87,12 +88,12 @@ int getProgram(insQueue *programQ, FILE* fin)
     
    }
 
-int processmdf(/*insert pcbvect here,*/ char* fpath)
+int processmdf(pcbQueue* readyQueue, char* fpath)
    {
     //variables
     FILE* mdfFile;
-    PCB pcbArr[10];     //temp until I make a PCB vector
-    int pid = 0;
+    PCB pcbuff;     //temp until I make a PCB vector
+    int pid = 1;
     char* garbage; 
     insQueue buff_q;
     
@@ -102,9 +103,8 @@ int processmdf(/*insert pcbvect here,*/ char* fpath)
     alloStr(&garbage, 50);
     constructQueue(&buff_q);
 
-    for(x=0; x < 10; x++){
-        constructPCB(&(pcbArr[x]), &buff_q, -1);
-    }
+    constructPCB(&pcbuff, &buff_q, -1);
+    
 
 
     mdfFile = fopen(fpath, "r");
@@ -125,7 +125,10 @@ int processmdf(/*insert pcbvect here,*/ char* fpath)
     while(getProgram(&buff_q, mdfFile))
        {
         //linking queue with new pcb
-        constructPCB(&(pcbArr[pid]), &buff_q, pid);
+        constructPCB(&pcbuff, &buff_q, pid);
+
+        pcbq_enqueue(readyQueue, &pcbuff);
+        
         pid++;
         
         //clear queue for next iteration
@@ -134,11 +137,6 @@ int processmdf(/*insert pcbvect here,*/ char* fpath)
        }
 
     fclose(mdfFile);
-    
-    for(pid = 0; pcbArr[pid].pid != -1; pid++){
-        printQueue(&(pcbArr[pid].instructions));
-        puts("");
-    }
     
     return 1;
    }
