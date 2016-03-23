@@ -276,7 +276,7 @@ void clearQueue(insQueue *self)
     instruction garbage;
     constructIns(&garbage);
 
-    while(dequeue(self, &garbage) != -1){};
+    while(dequeue(self, &garbage) != FALSE){};
     
     return;
    }

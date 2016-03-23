@@ -8,7 +8,7 @@
 int main(int argC, char* argv[]){
     
     OS opSys;
-    PCB pcb;
+//    pcbQueue readyQ;
     insQueue q;
     instruction output;
     float f = 0.0;
@@ -20,22 +20,10 @@ int main(int argC, char* argv[]){
     constructIns(&output);
     constructQueue(&q);
 
-    fin = fopen("t1.mdf","r");
-    
-    fgets(s, 50, fin);
-    clearStr(&s);
-
-    getInstruction(&s, fin);
-
-    getProgram(&q, fin);
-
-    fclose(fin);
-
     configOS(&opSys, "config.cnf");
     
-    constructPCB(&pcb, &q, 1);
-    
-    runPCB(&opSys, &pcb, &f);
+    processmdf(opSys.metaDatFile); 
+
 
     return 0;
 }
