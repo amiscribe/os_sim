@@ -8,7 +8,7 @@
 int main(int argC, char* argv[]){
     
     OS opSys;
-//    pcbQueue readyQ;
+    pcbQueue readyQ;
     insQueue q;
     instruction output;
     float f = 0.0;
@@ -19,10 +19,11 @@ int main(int argC, char* argv[]){
     constructOS(&opSys);
     constructIns(&output);
     constructQueue(&q);
+    constructPcbQueue(&readyQ, 10);
 
     configOS(&opSys, "config.cnf");
     
-    processmdf(opSys.metaDatFile); 
+    processmdf(&readyQ, opSys.metaDatFile); 
 
 
     return 0;

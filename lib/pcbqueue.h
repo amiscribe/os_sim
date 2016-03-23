@@ -51,6 +51,8 @@ void constructPcbQueue(pcbQueue *self, int seed)
 void insPcbQ(pcbQueue *self, const PCB* src, int ndx)
    {
     int cleanNdx = self->max;
+    insQueue temp;
+
 
     //check bounds
     while(ndx >= self->max)
@@ -60,7 +62,8 @@ void insPcbQ(pcbQueue *self, const PCB* src, int ndx)
 
         while(cleanNdx < self->max)
            {
-            constructPCB(&(self->vect[cleanNdx]), NULL, -1);
+            constructQueue(&temp);
+            constructPCB(&(self->vect[cleanNdx]), &temp, -1);
             cleanNdx++; 
            }
        }
