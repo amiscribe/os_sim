@@ -19,6 +19,7 @@ PCB* allocatePcbArr(int newSize)
    {
     PCB* newArr;
     int pcbCnt;
+    insQueue buffer;
 
     newArr = (PCB*) calloc(newSize, sizeof(PCB));
     
@@ -29,7 +30,8 @@ PCB* allocatePcbArr(int newSize)
 
     for(pcbCnt = 0; pcbCnt < newSize; pcbCnt++)
        {
-        constructPCB(&(newArr[pcbCnt]), NULL, -1);
+        constructQueue(&buffer);
+        constructPCB(&(newArr[pcbCnt]), &buffer, -1);
        }    
 
     return newArr;
@@ -75,7 +77,7 @@ void copyPcbQueue(pcbQueue* dest, const pcbQueue* source)
     //safe copy all data over to new struct
     for(cpyNdx = 0; cpyNdx < srcMax; cpyNdx++)
        {
-        insPcbQueue(dest, source->vect[cpyNdx], cpyNdx);
+        insPcbQ(dest, &(source->vect[cpyNdx]), cpyNdx);
        }
    }
 

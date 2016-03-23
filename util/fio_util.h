@@ -80,6 +80,9 @@ int getProgram(insQueue *programQ, FILE* fin)
            }    
     
         tins = parseIns(buffer);
+
+puts(tins.descriptor);
+
         enqueue(programQ, tins);
        } while(strcmp(tins.descriptor, "end"));
 
