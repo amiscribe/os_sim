@@ -5,26 +5,36 @@
 #include "util/fio_util.h"
 #include "lib/stringvect.h"
 
+int runOS(OS* opSys){
+    //variables
+    pcbQueue readyQ;
+    PCB running;
+    insQueue q;
+    float f = 0.0;
+
+    //constructions
+    constructQueue(&q);
+    constructPcbQueue(&readyQ, 10);
+    
+    processmdf(&readyQ, opSys->metaDatFile); 
+
+    while(pcbq_dequeue(&readyQ, &running))
+       {
+        runPCB(opSys, &running, &f);
+       }
+
+}
+
+
+
 int main(int argC, char* argv[]){
     
     OS opSys;
-    pcbQueue readyQ;
-    insQueue q;
-    instruction output;
-    float f = 0.0;
-    char* s;
-    FILE* fin;
-
-    alloStr(&s, 50);
-    constructOS(&opSys);
-    constructIns(&output);
-    constructQueue(&q);
-    constructPcbQueue(&readyQ, 10);
-
-    configOS(&opSys, "config.cnf");
     
-    processmdf(&readyQ, opSys.metaDatFile); 
+    constructOS(&opSys);
+    configOS(&opSys, argv[1]);
 
+    runOS(&opSys);
 
     return 0;
 }

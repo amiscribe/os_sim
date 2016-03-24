@@ -331,6 +331,8 @@ int getWaitTime(const OS* sysNfo, const instruction *ins)
        }
    }
 
+
+
 char* formatInstruction(int processId, float runTime, const instruction* insNfo, int start)
    {
     //variables
@@ -341,6 +343,8 @@ char* formatInstruction(int processId, float runTime, const instruction* insNfo,
     alloStr(&formatBuff, 60);
     alloStr(&intBuff, 5);
 
+    //start and end of program
+    
     //setup
     sprintf(intBuff,"%d",processId);
 
@@ -358,6 +362,7 @@ char* formatInstruction(int processId, float runTime, const instruction* insNfo,
        {
         strcat(formatBuff, "end ");
        }
+
 
     if(insNfo->component == 'A')
        {
@@ -387,7 +392,6 @@ char* formatInstruction(int processId, float runTime, const instruction* insNfo,
     return formatBuff;
    
    }
-
 
 void outputHandler(OS* opSys, char* output)
    {
