@@ -364,7 +364,7 @@ char* formatInstruction(int processId, float runTime, const instruction* insNfo,
        }
 
 
-    if(insNfo->component == 'A')
+    if(insNfo->component == 'P')
        {
         strcat(formatBuff, "processing");
        }
@@ -376,7 +376,7 @@ char* formatInstruction(int processId, float runTime, const instruction* insNfo,
 
     switch(insNfo->component)
        {
-        case 'A': //processing
+        case 'P': //processing
           strcat(formatBuff, "action");
           break;
         case 'I': //input
