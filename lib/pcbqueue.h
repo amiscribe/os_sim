@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include "oslib.h"
+#include <math.h>
 
 #ifndef PCBQUEUE_H
 #define PCBQUEUE_H
@@ -119,7 +120,37 @@ int pcbq_dequeue(pcbQueue *self, PCB* retPCB)
     return 1;
    }
 
-//heapsort
+//tree accessors
+//returns index of parent
+int getParent(int child)
+   {
+    return floor((child-1)/2);
+   }
+
+//returns index of left child
+int getLeft(int parent)
+   {
+    return (2*parent) + 1;
+   }
+
+//returns index of right child
+int getRight(int parent)
+   {
+    return (2*parent) + 2;
+   }
+
+
+//heapsort with accessors
+int minHeapSort(pcbQueue* self)
+   {
+    
+
+    
+    //on successful processing
+    return 1; 
+   }
+
+
 
 
 #endif

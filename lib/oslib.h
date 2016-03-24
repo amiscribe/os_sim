@@ -331,6 +331,26 @@ int getWaitTime(const OS* sysNfo, const instruction *ins)
        }
    }
 
+int sumInsTime(const OS* sysNfo, const insQueue* estimQ)
+   {
+    int acc = 0;
+    node* temp = estimQ->front;
+    
+    if(isEmpty(*estimQ))
+       {
+        return 0;
+       }
+    else
+       {
+        while(temp != NULL)
+           {
+            acc += getWaitTime(sysNfo, &(temp->ins));
+            temp = temp->next;
+           }
+       }
+
+    return acc;
+   }
 
 
 char* formatInstruction(int processId, float runTime, const instruction* insNfo, int start)

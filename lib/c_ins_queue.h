@@ -233,24 +233,6 @@ int getQueueLength(const insQueue* queue)
     return counter;
    }
 
-int sumInsCycles(const insQueue* self)
-   {
-    int acc = 0;
-    node* temp = self->front;
-    
-    if(isEmpty(*self))
-       {
-        return 0;
-       }
-    else
-       {
-        while(temp != NULL)
-           {
-            acc += (temp->ins).cycles;
-            temp = temp->next;
-           }
-       }
-   }
 
 void printQueue(const insQueue* queue)
    {
@@ -280,6 +262,9 @@ void clearQueue(insQueue *self)
     
     return;
    }
+
+
+
 
 #endif /*c_ins_queue.h*/
 
