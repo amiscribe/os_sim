@@ -89,15 +89,16 @@ int getProgram(insQueue *programQ, FILE* fin)
     
    }
 
-int processmdf(pcbQueue* readyQueue, char* fpath)
+int processmdf(const OS* sysNfo, pcbQueue* readyQueue)
    {
     //variables
     FILE* mdfFile;
-    PCB pcbuff;     //temp until I make a PCB vector
+    PCB pcbuff;    
     int pid = 1;
     char* garbage; 
     insQueue buff_q;
-    
+    char* fpath = sysNfo->metaDatFile;    
+
     int x = 0;
 
     //construction et al
@@ -127,6 +128,7 @@ int processmdf(pcbQueue* readyQueue, char* fpath)
        {
         //linking queue with new pcb
         constructPCB(&pcbuff, &buff_q, pid);
+        pcbuff.time = sumInsTime(sysNfo, &buff_q); 
 
         pcbq_enqueue(readyQueue, &pcbuff);
         

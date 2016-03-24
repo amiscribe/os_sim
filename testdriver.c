@@ -16,7 +16,7 @@ int runOS(OS* opSys){
     constructQueue(&q);
     constructPcbQueue(&readyQ, 10);
     
-    processmdf(&readyQ, opSys->metaDatFile); 
+    processmdf(opSys, &readyQ); 
 
     while(pcbq_dequeue(&readyQ, &running))
        {
