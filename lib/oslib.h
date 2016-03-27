@@ -358,6 +358,7 @@ char* formatInstruction(int processId, float runTime, const instruction* insNfo,
     //variables
     char* formatBuff;
     char* intBuff;
+    int progAppFlag;
 
     //allocate string space
     alloStr(&formatBuff, 60);
@@ -370,7 +371,10 @@ char* formatInstruction(int processId, float runTime, const instruction* insNfo,
 
     //do strcats
     strcat(formatBuff, ftoa(runTime));
+    
+    
     strcat(formatBuff, " - Process ");
+    
     strcat(formatBuff, intBuff);
     strcat(formatBuff, ": ");
   
@@ -440,7 +444,7 @@ void outputHandler(OS* opSys, char* output)
 
 
 /*
- * Process one instruction
+ * @brief Process one instruction
  *
  *
  *
@@ -538,7 +542,8 @@ void runPCB(OS* opSys, PCB* loadedPCB, float *runTime)
         //process insctuction
         processInstruction(opSys, &buffer, runTime);
         
-        //log stop instruction
+        //log stop instruction if not program
+        // start end notification
         formatOut = formatInstruction(loadedPCB->pid, *runTime, &buffer, END);
         outputHandler(opSys, formatOut);
        }
