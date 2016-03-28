@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include "oslib.h"
-#include <math.h>
+#include <tgmath.h>
 
 #ifndef PCBQUEUE_H
 #define PCBQUEUE_H
@@ -124,7 +124,7 @@ int pcbq_dequeue(pcbQueue *self, PCB* retPCB)
 //returns index of parent
 int getParent(int child)
    {
-    return floor((child-1)/2);
+//    return floor((child-1)/2);
    }
 
 //returns index of left child
