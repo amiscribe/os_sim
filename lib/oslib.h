@@ -357,61 +357,91 @@ char* formatInstruction(int processId, float runTime, const instruction* insNfo,
    {
     //variables
     char* formatBuff;
-    char* intBuff;
+    char* pid;
     int progAppFlag;
 
     //allocate string space
     alloStr(&formatBuff, 60);
-    alloStr(&intBuff, 5);
+    alloStr(&pid, 5);
 
-    //start and end of program
-    
     //setup
-    sprintf(intBuff,"%d",processId);
-
-    //do strcats
-    strcat(formatBuff, ftoa(runTime));
+    sprintf(pid,"%d",processId);
     
-    
-    strcat(formatBuff, " - Process ");
-    
-    strcat(formatBuff, intBuff);
-    strcat(formatBuff, ": ");
-  
-    if(start == START)
+    //start and end of program case
+    if(insNfo->component == 'A')
        {
-        strcat(formatBuff, "start ");
-       }
-    else  
-       {
-        strcat(formatBuff, "end ");
-       }
+        strcat(formatBuff, ftoa(runTime));
+        strcat(formatBuff, " - OS: ");
+
+        if(!strcmp(insNfo->descriptor, "start") && (start == START))
+           {
+            strcat(formatBuff, "preparing process ");
+            strcat(formatBuff, pid);
+           }
+        
+        else if(!strcmp(insNfo->descriptor, "start") && (start == END))
+           {
+            strcat(formatBuff, "starting process ");
+            strcat(formatBuff, pid);
+           }
+        
+        else if(!strcmp(insNfo->descriptor, "end") && (start == START))
+           {
+            strcat(formatBuff, "removing process ");
+            strcat(formatBuff, pid);
+           }
+        else if(!strcmp(insNfo->descriptor, "end") && (start == END))
+           {
+            free(pid);
+            return NULL;
+           }
+
+       } 
+    else //standard case
+       { 
+        //do strcats
+        strcat(formatBuff, ftoa(runTime));
+        
+        
+        strcat(formatBuff, " - Process ");
+        
+        strcat(formatBuff, pid);
+        strcat(formatBuff, ": ");
+      
+        if(start == START)
+           {
+            strcat(formatBuff, "start ");
+           }
+        else  
+           {
+            strcat(formatBuff, "end ");
+           }
 
 
-    if(insNfo->component == 'P')
-       {
-        strcat(formatBuff, "processing");
-       }
-    else
-       {
-        strcat(formatBuff, insNfo->descriptor);
-       }
-    strcat(formatBuff, " ");
+        if(insNfo->component == 'P')
+           {
+            strcat(formatBuff, "processing");
+           }
+        else
+           {
+            strcat(formatBuff, insNfo->descriptor);
+           }
+        strcat(formatBuff, " ");
 
-    switch(insNfo->component)
-       {
-        case 'P': //processing
-          strcat(formatBuff, "action");
-          break;
-        case 'I': //input
-          strcat(formatBuff, "input");
-          break;
-        case 'O': //output
-          strcat(formatBuff, "output");
-          break;
+        switch(insNfo->component)
+           {
+            case 'P': //processing
+              strcat(formatBuff, "action");
+              break;
+            case 'I': //input
+              strcat(formatBuff, "input");
+              break;
+            case 'O': //output
+              strcat(formatBuff, "output");
+              break;
+           }
        }
-   
-    free(intBuff);
+    free(pid);
 
     return formatBuff;
    
@@ -545,7 +575,11 @@ void runPCB(OS* opSys, PCB* loadedPCB, float *runTime)
         //log stop instruction if not program
         // start end notification
         formatOut = formatInstruction(loadedPCB->pid, *runTime, &buffer, END);
-        outputHandler(opSys, formatOut);
+        
+        if(formatOut != NULL)
+           {
+            outputHandler(opSys, formatOut);
+           }
        }
   }
 
