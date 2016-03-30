@@ -124,7 +124,7 @@ int pcbq_dequeue(pcbQueue *self, PCB* retPCB)
 //returns index of parent
 int getParent(int child)
    {
-//    return floor((child-1)/2);
+    return (int) (child-1)/2; //returns floor 
    }
 
 //returns index of left child
@@ -139,18 +139,107 @@ int getRight(int parent)
     return (2*parent) + 2;
    }
 
-
-//heapsort with accessors
-int minHeapSort(pcbQueue* self)
+void swap(PCB *one, PCB *other)
    {
-    
+    PCB temp;
 
-    
-    //on successful processing
-    return 1; 
+    constructPCB(&temp, NULL, 0);
+
+    temp = pcbCopy(one);
+    *one = pcbCopy(other);
+    *other = pcbCopy(&temp);
+   }
+
+int getMaxChild(const pcbQueue *self, int parent, int varSize)
+   {
+    //variables
+    int lc = getLeft(parent);           //left child node
+    int rc = getRight(parent);          //right child node
+    PCB* leftChild = &(self->vect[lc]);
+    PCB* rightChild = &(self->vect[rc]);
+
+    if(rc >= varSize || leftChild->time > rightChild->time)
+       {
+        return lc;
+       }
+
+    return rc;
    }
 
 
+//heapsort with accessors
+void sink(pcbQueue* self, int root, int varSize)
+   {
+    //variables
+    int lc = getLeft(root);
+    int rc = getRight(root);
+    int mc;                   //max value child
 
+    PCB* parent = &(self->vect[root]);
+    PCB* child;
+
+    if(lc >= varSize)
+      {
+       return;
+      }
+
+    mc = getMaxChild(self, root, varSize);
+    child = &(self->vect[mc]);
+
+
+    if(parent->time >= child->time)
+      {
+       return;
+      }
+
+    swap(parent, child);
+
+   }
+
+
+void heapify(pcbQueue* self)
+   {
+    //variables
+    int pNdx;
+    int size = self->size;
+    
+    for(pNdx = ((size/2)-1); pNdx > -1; pNdx--)
+       {
+        sink(self, pNdx, size);
+       }
+
+   }
+
+void getRuntimes(OS* sysNfo, pcbQueue *self)
+  {
+   //vairables
+   int pNdx;
+   PCB* readyQueue = self->vect;
+
+   for(pNdx = 0; pNdx < self->size; pNdx++)
+      {
+       readyQueue[pNdx].time = sumInsTime(sysNfo, &(readyQueue[pNdx].instructions));
+      }
+  }
+
+void heapsort(OS* sysNfo, pcbQueue *self)
+  {
+   //variable
+   const int head = 0;
+   int pNdx;
+   int size = self->size;
+   PCB* vector = self->vect;
+
+   //get runtimes every time function is called for SRJF
+   getRuntimes(sysNfo, self);
+
+   heapify(self);
+
+   for(pNdx = 0; pNdx < size; pNdx++)
+      {
+       swap(&(vector[head]), &(vector[((size-pNdx)-1)]));
+       sink(self, head, ((size-pNdx)-1));
+      }
+  }
 
 #endif
