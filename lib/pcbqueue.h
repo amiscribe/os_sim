@@ -135,6 +135,16 @@ int pcbq_dequeue(pcbQueue *self, PCB* retPCB)
     return 1;
    }
 
+int pcbq_isEmpty(const pcbQueue *self)
+   {
+    if(self->size == 0)
+       {
+        return 1;
+       }
+
+    return 0;
+   }
+
 //tree accessors
 //returns index of parent
 int getParent(int child)

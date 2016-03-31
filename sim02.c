@@ -12,7 +12,7 @@
    * M.S. Student (03 Feb, 2015)
    * Initial Design and Implementation of Main Driver and relevant subroutines
    *
-   * @note Requires stdio.h, syscall.h, sys/types.h, sys/wait.h, unistd.h & string.h
+   * @note Requires stdio.h, string.h
    */
 
 
@@ -21,13 +21,10 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <ctype.h>
 #include <string.h>
 
 
 //personal libraries
-#include "lib/stringlib.h"
-#include "lib/c_ins_queue.h"
 #include "util/SimpleTimer.h"
 #include "lib/oslib.h"
 #include "util/fio_util.h"
@@ -36,31 +33,23 @@
 
 //Global Constants & Structs//////////////////////////////////////
 //////////////////////////////////////////////////////////////////
-const int STATICSIZE = 500;    /*For static allocation*/
-const int NUMCONFIGLINES = 12; /*For static allocation*/
-
-
-const char SPACE = ' ';
-
-const int B = 1;
+const int BEGIN = 1;
 const int DONE = 0;
-
+const int SELECTING = 2;
 
 //Function Delarations////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-    
-
 
 
 /**
- * @brief Load Meta-Data File
+ * @brief main driver function for simulation
  *
- * @details Downloads Meta-Data from external file, parses and loads into queue
+ * @details loads, organizes and runs PCBs according to configuration file
  *          
- * @param char* filepath: path to Meta-Data file
- *          
- * @param insQueue* destQ: queue where our instructions will be loaded
+ * @param OS* opSys struct containing all info about the operating system
+ * 
+ * @param SimpleTimer* sysTime the timer initialized in main for logging the sim start time          
  *
  * @return int notification of sucessful or failed upload
  *
@@ -68,8 +57,33 @@ const int DONE = 0;
  */
 int runOS(OS* opSys, SimpleTimer* sysTime);
 
+/**
+ * @brief Output the status of the OS
+ * 
+ * @details Output operationg system actions
+ *
+ * @param OS* opSys: struct containing all the operating system info
+ *
+ * @param float* runTime: contains the current runtime of the simulation
+ *
+ * @param int status: an int flagging the type of output 
+ *
+ *
+ */
 
-void outputSimStatus(OS* opSys, float *runTime, SimpleTimer* sysTime, int status);
+void tellOSStatus(OS* opSys, float *runTime, int status);
+
+/**
+ * @brief stop the timer and return runtime in float form
+ *
+ * @param SimpleTimer* clock: the current runtime clock of the simulations
+ *
+ * @return the runtime from the most recent timer run
+ *
+ */
+
+float getTime(SimpleTimer *clock);
+
 
 
 //Main Program Driver/////////////////////////////////////////////
@@ -125,72 +139,109 @@ int runOS(OS* opSys, SimpleTimer* sysTime){
 
     //output program begin
     stop(sysTime);
-//    outputSimStatus(opSys, &totalTime, sysTime, B);
+    getElapsedTime(&elapTime, sysTime);
+    totalTime += atof(elapTime);
+    
+    tellOSStatus(opSys, &totalTime, BEGIN);
 
     //get the time of input operations
     start(sysTime);
     
+    
     processmdf(opSys, &readyQ); 
     
+
     stop(sysTime);
-    
     getElapsedTime(&elapTime, sysTime);
-    
     totalTime += atof(elapTime);
     
-    start(sysTime);
-
-
     
+    
+    start(sysTime);
     //arrange the queue to be ordered by shortest job
     //under circumstances of Shortest Job First and Shortest Remaining...
-    if(opSys->schedule == "SJF" || opSys->schedule == "SRTF-N" )
-      {
+    if(!strcmp(opSys->schedule, "SJF") || !strcmp(opSys->schedule, "SRTF-N") )
+       {
         heapsort(opSys, &readyQ);
        }
 
+    stop(sysTime);
+    getElapsedTime(&elapTime, sysTime);
+    totalTime += atof(elapTime);
+    //output process selection
+
+    tellOSStatus(opSys, &totalTime, SELECTING);
+
+    start(sysTime);
+    
     //run each process
     while(pcbq_dequeue(&readyQ, &running))
        {
+        stop(sysTime);
+        getElapsedTime(&elapTime, sysTime);
+        totalTime += atof(elapTime);
+        
         runPCB(opSys, &running, &totalTime);
         
-        //Shortest Remaining Task First
-        //scheduling alogrithim
-        if(opSys->schedule == "SRTF-N" )
-           {
-            heapsort(opSys, &readyQ);
-           }
 
+        if(!pcbq_isEmpty(&readyQ))
+          {
+           tellOSStatus(opSys, &totalTime, SELECTING);
+           start(sysTime);
+           //Shortest Remaining Task First
+           if(!strcmp(opSys->schedule,"SRTF-N") )
+              {
+               heapsort(opSys, &readyQ);
+              }
+           stop(sysTime);
+           getElapsedTime(&elapTime, sysTime);
+           totalTime += atof(elapTime);
+          }
+
+        start(sysTime);
        }
 
     //output sim end
     stop(sysTime);
-  //  outputSimStatus(opSys, &totalTime, sysTime, DONE);
+    getElapsedTime(&elapTime, sysTime);
+    totalTime += atof(elapTime);
+    
+    tellOSStatus(opSys, &totalTime, DONE);
 
 }
 
-void outputSimStatus(OS* opSys, float *runTime, SimpleTimer* sTime, int status)
+
+
+
+
+void tellOSStatus(OS* opSys, float *runTime, int status)
    {
     //variables
     char* elapTime;
     char* outBuff; 
 
+    //constructions
     alloStr(&outBuff, 50);
+    alloStr(&elapTime, 10);
 
-    getElapsedTime(&elapTime, sTime);
-    *runTime += atof(elapTime);
 
+    elapTime = ftoa(*runTime);
     strcat(outBuff, elapTime);
-    if(status == B)
+    
+    if(status == BEGIN)
        {
         strcat(outBuff, " - Simulator Program Starting");
        }
-    else
+    else if(status == SELECTING)
+       {
+        strcat(outBuff, " - OS: Scheduling Next Process");
+       }
+    else if(status == DONE)
        {
         strcat(outBuff, " - Simulator Program Ending");
        }
 
     outputHandler(opSys, outBuff);
 
-    free(outBuff);
    }
+

@@ -230,7 +230,7 @@ int configOS(OS* self, char* configF)
        {
         buffer = strtok(lineHolder.vect[lineCtr], ":");
  
-        if(strcmp(buffer, "Log"))
+        if(strcmp(buffer, "Log") || strcmp(buffer, "CPU Scheduling"))
            {
             lineHolder.vect[lineCtr] = strtok(NULL, "\n");
             removeLeadingChar(&(lineHolder.vect[lineCtr]));
@@ -384,25 +384,18 @@ char* formatInstruction(int processId, float runTime, const instruction* insNfo,
        {
         strcat(formatBuff, ftoa(runTime));
         strcat(formatBuff, " - OS: ");
-
-        if(!strcmp(insNfo->descriptor, "start") && (start == START))
-           {
-            strcat(formatBuff, "preparing process ");
-            strcat(formatBuff, pid);
-           }
         
-        else if(!strcmp(insNfo->descriptor, "start") && (start == END))
+        if(!strcmp(insNfo->descriptor, "start") && (start == START))
            {
             strcat(formatBuff, "starting process ");
             strcat(formatBuff, pid);
            }
-        
         else if(!strcmp(insNfo->descriptor, "end") && (start == START))
            {
             strcat(formatBuff, "removing process ");
             strcat(formatBuff, pid);
            }
-        else if(!strcmp(insNfo->descriptor, "end") && (start == END))
+        else
            {
             free(pid);
             return NULL;
