@@ -14,6 +14,21 @@ struct pcbQueue
     int size;
    };
 
+void print_pcb_queue(pcbQueue* self)
+   {
+    //variable
+    int pndx;
+    
+    printf("%c", '[');
+    for(pndx = 0; pndx < self->size; pndx++)
+       {
+        printf("%s", " Process ");
+        printf("%i", (self->vect[pndx]).pid);
+        printf("%c", ',' );
+       }
+    printf("%c", ']');
+
+   }
 
 
 PCB* allocatePcbArr(int newSize)
@@ -142,7 +157,7 @@ int getRight(int parent)
 void swap(PCB *one, PCB *other)
    {
     PCB temp;
-
+    
     constructPCB(&temp, NULL, 0);
 
     temp = pcbCopy(one);
@@ -193,6 +208,8 @@ void sink(pcbQueue* self, int root, int varSize)
       }
 
     swap(parent, child);
+   
+    sink(self, mc, varSize);    
 
    }
 
@@ -203,6 +220,7 @@ void heapify(pcbQueue* self)
     int pNdx;
     int size = self->size;
     
+
     for(pNdx = ((size/2)-1); pNdx > -1; pNdx--)
        {
         sink(self, pNdx, size);
@@ -234,12 +252,15 @@ void heapsort(OS* sysNfo, pcbQueue *self)
    getRuntimes(sysNfo, self);
 
    heapify(self);
-
-   for(pNdx = 0; pNdx < size; pNdx++)
-      {
-       swap(&(vector[head]), &(vector[((size-pNdx)-1)]));
-       sink(self, head, ((size-pNdx)-1));
-      }
+   
+   if(size > 1) //account for edge case of one item
+     {
+      for(pNdx = 0; pNdx < size; pNdx++)
+         {
+          swap(&(vector[head]), &(vector[((size-pNdx)-1)]));
+          sink(self, head, ((size-pNdx)-1));
+         }
+     }
   }
 
 #endif

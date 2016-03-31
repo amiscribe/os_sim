@@ -44,6 +44,8 @@ int runOS(OS* opSys, SimpleTimer* sysTime){
 
     start(sysTime);
 
+    heapsort(opSys, &readyQ);
+
     while(pcbq_dequeue(&readyQ, &running))
        {
         runPCB(opSys, &running, &f);

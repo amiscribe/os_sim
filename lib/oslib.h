@@ -108,9 +108,21 @@ struct PCB
 
 int constructPCB(PCB *self, const insQueue *instr, int pid)
    {    
+    //variables
+    insQueue blankQ;
+    
     self->pState = NEW;
     self->pid = pid;
-    self->instructions = queueCopy(instr);
+    
+    if(instr == NULL)
+       {
+        constructQueue(&blankQ);
+        self->instructions = queueCopy(&blankQ);
+       }
+    else
+       {
+       self->instructions = queueCopy(instr);
+       }
     self->time = 0;
 
     return 1;
