@@ -302,7 +302,7 @@ int configOS(OS* self, char* configF)
        {
         self->logTo = FOUT;
        }
-    if(strCmp(lineHolder.vect[LOGTO], "Log to Monitor"))
+    else if(strCmp(lineHolder.vect[LOGTO], "Log to Monitor"))
        {
         self->logTo = MONITOR;
        }

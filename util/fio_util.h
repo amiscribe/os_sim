@@ -166,3 +166,33 @@ int processmdf(const OS* sysNfo, pcbQueue* readyQueue)
     return 1;
    }
 
+//outputs log held by os
+int logToFile(OS* opSys)
+   {
+    //variables
+    FILE* fout;
+    char* outString;
+
+    alloStr(&outString, 100);
+
+    fout = fopen(opSys->logFile, "w");
+    
+    //file write error
+    if(fout == NULL)
+       {
+        return 0;
+       }
+
+    //dequeue and put lines
+    while( sv_dequeue(&(opSys->runtimeLog), &outString) )
+       {
+        fputs(outString, fout);
+        fputc('\n', fout);
+       }
+
+    fclose(fout);
+
+    free(outString);
+  
+    return 1;
+   }

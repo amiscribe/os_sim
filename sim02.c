@@ -40,6 +40,7 @@
 const int BEGIN = 1;
 const int DONE = 0;
 const int SELECTING = 2;
+const int INITIAL = 3;
 
 //Function Delarations////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -132,13 +133,21 @@ int main(int argc, char* argv[])
    
     if(!configOS(&opSys, argv[1]))
        {
-        puts("Error: File Not Found");
+        puts("Error: Config File Not Found");
         return 0;
        }
 
     //run operating system
     runOS(&opSys, &clock);
 
+    if(opSys.logTo == FOUT || opSys.logTo == BOTH)
+      {
+       if(!logToFile(&opSys))
+          {
+           puts("Error: Write File Error");
+           return 0;
+          }
+      }
     return 0;
    }
 
@@ -179,6 +188,8 @@ int runOS(OS* opSys, SimpleTimer* sysTime)
     getTime(sysTime, &totalTime);
     
     
+    
+    tellOSStatus(opSys, &totalTime, INITIAL);
     
     //arrange the queue to be ordered by shortest job
     //under circumstances of Shortest Job First and Shortest Remaining...
@@ -224,10 +235,6 @@ int runOS(OS* opSys, SimpleTimer* sysTime)
     return 1;
    }
 
-
-
-
-
 void tellOSStatus(OS* opSys, float *runTime, int status)
    {
     //variables
@@ -245,6 +252,10 @@ void tellOSStatus(OS* opSys, float *runTime, int status)
     if(status == BEGIN)
        {
         strcat(outBuff, " - Simulator Program Starting");
+       }
+    else if(status == INITIAL)
+       {
+        strcat(outBuff, " - OS: Preparing All Processes");
        }
     else if(status == SELECTING)
        {

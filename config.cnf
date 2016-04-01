@@ -1,6 +1,6 @@
 Start Simulator Configuration File
 Version/Phase: 2.0
-File Path: t1.mdf
+File Path: t3.mdf
 CPU Scheduling: SRTF-N
 Processor cycle time (msec): 10
 Monitor display time (msec): 25
@@ -8,5 +8,5 @@ Hard drive cycle time (msec): 50
 Printer cycle time (msec): 500
 Keyboard cycle time (msec): 100
 Log: Log to Both
-Log File Path: logfile_1.lgf
+Log File Path: logfile_2.lgf
 End Simulator Configuration File
