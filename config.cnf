@@ -1,6 +1,6 @@
 Start Simulator Configuration File
 Version/Phase: 2.0
-File Path: t3.mdf
+File Path: t1.mdf
 CPU Scheduling: SRTF-N
 Processor cycle time (msec): 10
 Monitor display time (msec): 25

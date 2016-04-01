@@ -1,11 +1,11 @@
 
 //Program Header Information /////////////////////////////
 /**
-  * @file pcblib.h
+  * @file oslib.h
   *
-  * @brief PCB Data Type and associated processes
+  * @brief PCB Data Struct, OS Data Struct and associated processes
   *
-  * @details Specifies Process Control Block Data Struct,
+  * @details Specifies OS Data Struct, Process Control Block Data Struct,
   *          a State type Enum, & various functions for maniplating and handling
   *          these data types
   * 
@@ -13,20 +13,32 @@
   *          Masters Student (26 Febuary, 2016) 
   *          Initial develolpment of Process Control Block and Associacted Data Types and Functions
   *    
-  * @note Rquires "stringlib.h",  
+  * @version 1.10
+  *          Masters Student (15 March, 2016) 
+  *          Heavy modifications and additions of utility functions realted to OS management, output and processing
+  *
   */
 
 
-#include "./stringlib.h"
-#include <stdio.h>
-#include "./c_ins_queue.h"
-#include "./stringvect.h"
+///////////////////////////////////////////////////////////////////////////
+//Include Files////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
 
 #include <pthread.h>
+#include <stdio.h>
+
+#include "./stringlib.h"
+#include "./c_ins_queue.h"
+#include "./stringvect.h"
 #include "../util/SimpleTimer.h"
 
 #ifndef OSLIB_H
 #define OSLIB_H
+
+//////////////////////////////////////////////////////////////////////////
+//Global Constants////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+
 
 const char ENDCONFIG[] = "End Simulator Configuration File"; 
 
@@ -45,15 +57,17 @@ const int LOGPATH = 9;
 const int START = 1;
 const int END = 0;
 
+
+
+///////////////////////////////////////////////////////////////////////////
+//Data Type Defintions/////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
+
 //forward declarations
 typedef enum state_t state_t;
 typedef enum trilog trilog;
 typedef struct PCB PCB;
 typedef struct OS OS;
-
-///////////////////////////////////////////////////////////////////////////
-//Data Type Defintions/////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////
 
 //state enumeration
 //represents current process state
@@ -66,6 +80,8 @@ enum state_t
     TERMINATED
    };
 
+//enum for easy comparision of
+//log options
 enum trilog
    {
     MONITOR,
@@ -97,13 +113,14 @@ struct PCB
     state_t pState;               //process state
     int pid;                      //process id number
     insQueue instructions;        //instruction queue
-    int time;                     //total runtime for SJF and SRJF org
+    int time;                     //total runtime for SJF and SRJF scheduling
    };
 
 
-//Constructors//////////////////////////////////////////
-////////////////////////////////////////////////////////
 
+/////////////////////////////////////////////////////////////////
+//Constructors///////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////
 
 
 int constructPCB(PCB *self, const insQueue *instr, int pid)
@@ -111,15 +128,17 @@ int constructPCB(PCB *self, const insQueue *instr, int pid)
     //variables
     insQueue blankQ;
     
+    //set state and pid
     self->pState = NEW;
     self->pid = pid;
     
+    //null option for blank intialization
     if(instr == NULL)
        {
         constructQueue(&blankQ);
         self->instructions = queueCopy(&blankQ);
        }
-    else
+    else //for initilization with instructions
        {
        self->instructions = queueCopy(instr);
        }
@@ -144,21 +163,23 @@ void constructOS(OS* self)
     constructVect(&(self->runtimeLog), 10);
    }
 
-//Destructors/////////////////////////////////////////
-/////////////////////////////////////////////////////
 
 
 
 
 
 
-
-
+///////////////////////////////////////////////////////
 //Utilities////////////////////////////////////////////
-//////////////////////////////////////////////////////
+///////////////////////////////////////////////////////
 
 
-//mysleep
+/**
+ * @brief custom defined sleep function to simulate processing time
+ * 
+ * @param int msec time to sleep in milliseconds
+ *
+ */
 void mysleep(int msec)
    {
     //variables
@@ -175,9 +196,12 @@ void mysleep(int msec)
    }
 
 
-
-//process to be called by pthread
-// create()
+/**
+ * @brief process to be called by pthread create
+ *
+ * @param void* param generic parameter passed from pthread create
+ *
+ */
 void* runner(void* param)
    {
     //variables
@@ -195,8 +219,18 @@ void* runner(void* param)
    }
 
 
-
-//returns int for possible error conditions
+/**
+ * @brief loads in configuration file and stores all information into OS struct
+ *
+ * @detailed takes in info one line at a time into vector and then parses and sanitizes
+ *            the lines into raw data to be stored in OS struct
+ *
+ * @param OS* self the operating system to be configured
+ *
+ * @param char* configF the name of the configuration file
+ *
+ * @return int error or sucess file open status
+ */
 int configOS(OS* self, char* configF)
    { 
     //variables
@@ -212,19 +246,29 @@ int configOS(OS* self, char* configF)
     //open file
     fin = fopen(configF,"r");
 
+    //fopen error
+    if(fin == NULL)
+       {
+        return 0;
+       }
+
     //read in garbage first line
     fgets(buffer, 100, fin);
 
     //read all subsequent lines into line holder
-    while(!feof(fin)){
+    while(!feof(fin))
+       {
         fgets(buffer, 500, fin);
         insAtNdx(&lineHolder, buffer, lineCtr);
         lineCtr++;
-    }    
+       }    
+  
+    fclose(fin);
 
     lineCtr = 0;
 
-    //parse each line (strtok)
+    //parse each line
+    //getting info to right of ':'
     while(lineCtr < 10)
        {
         buffer = strtok(lineHolder.vect[lineCtr], ":");
@@ -267,17 +311,26 @@ int configOS(OS* self, char* configF)
         self->logTo = BOTH;
        }
     
-    
+    free(buffer);
     return 1;
    }
 
+
+/**
+ * @brief Copy processing control block struct and return
+ * 
+ * @param const PCB* origin  the PCB to be copied
+ *
+ * @return PCB  newly constructed PCB, copy of origin PCB
+ */
+
 PCB pcbCopy(const PCB *origin)
    {
-    //declare variables
+    //variables
     PCB newPCB;
 
+    //copy instruction of origin and pid in construction
     constructPCB(&newPCB, &(origin->instructions), origin->pid);
-    
     newPCB.pState = origin->pState;
     newPCB.time = origin->time;
 
@@ -286,14 +339,11 @@ PCB pcbCopy(const PCB *origin)
 
 
 
+
 /*
  * @brief get current total runtime of process
  *
- *
- *
- *
- *
- *
+ * @param float* runtime  the present total runtime - modified in function
  *
  */
 void getPresentRuntime(float *runtime)
@@ -306,12 +356,29 @@ void getPresentRuntime(float *runtime)
 
     start(&timer);
     stop(&timer);
-
     getElapsedTime(&timeStr, &timer);
 
     *runtime += atof(timeStr);
+
+    free(timeStr);
    }
 
+
+
+
+
+/**
+ * @brief calculates the required sleep time for a given instruction
+ *
+ * @detailed multiplies cycle times supplied by OS with the number of cycles
+ *           supplied by instruction
+ * 
+ * @param OS* sysNfo the information of the operating system for cycle times
+ *
+ * @param instruction* ins the instruction to be calculated 
+ *
+ * @return the wait time in msec
+ */
 int getWaitTime(const OS* sysNfo, const instruction *ins)
    {
     if( strCmp(ins->descriptor, "run") )
@@ -339,12 +406,27 @@ int getWaitTime(const OS* sysNfo, const instruction *ins)
         return ins->cycles * sysNfo->printCycTime; 
        }
 
-    else //start and end cases
+    else //start and end instructions
        {
         return 0; 
        }
    }
 
+
+
+/**
+ * @brief returns the sum total of processing time for a single instruction
+ *
+ * @detailed calls getWaitTime() on every instruction in a programs instruction queue
+ *           and sums all the resulting times
+ *
+ * @param OS* sysNfo the Operating System information used for cycle times
+ *
+ * @param insQueue* estimQ the instructions we are getting the runtime of
+ *
+ * @return int the sum time of all instructions in a given process
+ *
+ */
 int sumInsTime(const OS* sysNfo, const insQueue* estimQ)
    {
     int acc = 0;
@@ -366,6 +448,24 @@ int sumInsTime(const OS* sysNfo, const insQueue* estimQ)
     return acc;
    }
 
+/**
+ * @brief formats the processing of instructions for output
+ * 
+ * @detailed using a series of control statments generic instructions are formatted
+ *           as strings for output
+ *
+ * @param int processId  the id of the instruction's process
+ *
+ * @param float runTime  the current runtime of the simulation
+ *
+ * @instruction* insNfo  the info of the instruction to be output
+ *
+ * @int start  flag indicating start or end of instruction processing
+ *
+ * @return char* the formatted string 
+ *
+ *
+ */
 
 char* formatInstruction(int processId, float runTime, const instruction* insNfo, int start)
    {
@@ -403,14 +503,12 @@ char* formatInstruction(int processId, float runTime, const instruction* insNfo,
            }
 
        } 
+
     else //standard case
        { 
-        //do strcats
+        //build output string
         strcat(formatBuff, ftoa(runTime));
-        
-        
         strcat(formatBuff, " - Process ");
-        
         strcat(formatBuff, pid);
         strcat(formatBuff, ": ");
       
@@ -432,6 +530,7 @@ char* formatInstruction(int processId, float runTime, const instruction* insNfo,
            {
             strcat(formatBuff, insNfo->descriptor);
            }
+
         strcat(formatBuff, " ");
 
         switch(insNfo->component)
@@ -447,12 +546,24 @@ char* formatInstruction(int processId, float runTime, const instruction* insNfo,
               break;
            }
        }
-    free(pid);
 
+
+    free(pid);
     return formatBuff;
-   
    }
 
+
+/**
+ * @brief handles the output as defined by the user
+ *
+ * @detailed sorts all output to the monitor, buffer for file I/O or both
+ *
+ * @param OS* opSys the operating system for output configuaraion and
+ *            hold file output
+ *
+ * @param char* output the formatted output string to be stored or printed
+ *
+ */
 void outputHandler(OS* opSys, char* output)
    {
     //variables
@@ -475,6 +586,10 @@ void outputHandler(OS* opSys, char* output)
             break;
        }
    }
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////
 //Runtime Handlers//////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -482,10 +597,15 @@ void outputHandler(OS* opSys, char* output)
 /*
  * @brief Process one instruction
  *
+ * @detailed sleeps for requeisite amout of time dictated by instruction and OS
  *
+ * @param OS* sysNfo the Operating System configuration information (for cycle times)
  *
+ * @param instruction* pIns the instruction to be processed
  *
+ * @param float* runTime the present runtime of the simulation
  *
+ * @return int sucessful process
  */
 
 int processInstruction(const OS* sysNfo, const instruction* pIns, float *runTime)
@@ -502,8 +622,7 @@ int processInstruction(const OS* sysNfo, const instruction* pIns, float *runTime
     makeSimpleTimer(&runTimer);
     alloStr(&timeStr, 10);
     
-
-
+    //make unique sleep thread for IO operations
     if(pIns->component == 'I' || pIns->component == 'O')
        {
         //setup thread with default attributes
@@ -518,15 +637,12 @@ int processInstruction(const OS* sysNfo, const instruction* pIns, float *runTime
         pthread_join(tid, NULL);
 
         stop(&runTimer);        
-
         getElapsedTime(&timeStr ,&runTimer);
-
         *runTime += atof(timeStr);
-
         timeStr = ftoa(*runTime);
        }
-    
-    else if(pIns->component == 'P')
+    //processing case
+    else if(pIns->component == 'P') 
       {
        //start timer
        start(&runTimer);
@@ -537,12 +653,10 @@ int processInstruction(const OS* sysNfo, const instruction* pIns, float *runTime
        //cleanup
        stop(&runTimer);
        getElapsedTime(&timeStr, &runTimer);
-
        *runTime += atof(timeStr);
-
        timeStr = ftoa(*runTime);
       }
-
+    //start and end program case
     else if(pIns->component == 'A')
      {
       getPresentRuntime(runTime);  
@@ -551,12 +665,18 @@ int processInstruction(const OS* sysNfo, const instruction* pIns, float *runTime
     return 1;
    }
 
+
+
 /*
  * @brief handles the instructions of one PCB
  *
+ * @detailed unloads and runs all instructions contained in a given PCB
  *
+ * @param OS* opSys operating system configuration information
  *
+ * @param PCB* loadedPCB  the PCB loaded and run by the OS 
  *
+ * @param float *runtime  the current runtime of the simulation
  *
  */
 void runPCB(OS* opSys, PCB* loadedPCB, float *runTime)

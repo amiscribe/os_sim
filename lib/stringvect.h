@@ -1,3 +1,22 @@
+
+//Program Header Information /////////////////////////////
+/**
+  * @file stringvect.h
+  *
+  * @brief vector to hold and safely insert strings
+  *
+  * @details Defines string vector Data Struct with
+  *           constructor, accessors and modifiers 
+  * 
+  * @version 1.00
+  *          Masters Student (19 March, 2016) 
+  *          Initial Implementation
+  *
+  */
+
+
+
+
 #include <stdlib.h>
 #include <string.h>
 #include "stringlib.h"
@@ -16,8 +35,7 @@ struct strVect
     int size;
    };
 
-
-
+//allocate an array of empty strings
 char** allocateEmpStrArr(int size)
    {
     char** newArr;
@@ -39,7 +57,7 @@ char** allocateEmpStrArr(int size)
    }
 
 
-
+//construct the vector
 void constructVect(strVect *self, int seed)
    {
     self->max = seed;
@@ -82,8 +100,8 @@ void copyStrVect(strVect* dest, const strVect* source)
        }
    }
 
-//queue functionality
 
+//queue functionality
 void sv_enqueue(strVect *self, const char* string)
    {
     

@@ -1,6 +1,25 @@
+//Program Header Information /////////////////////////////
+/**
+  * @file pcbqueue.h
+  *
+  * @brief queue of pcb structs and associated functions
+  *
+  * @details Specifies PCB Queue data struct, constructors,
+  *          accessors and an heapsort algorithim 
+  * 
+  * @version 1.00
+  *          Masters Student (19 March, 2016) 
+  *          Initial Implementation
+  *
+  */
+
+
+
+
+
 #include <stdlib.h>
 #include "oslib.h"
-#include <tgmath.h>
+
 
 #ifndef PCBQUEUE_H
 #define PCBQUEUE_H
@@ -9,11 +28,12 @@ typedef struct pcbQueue pcbQueue;
 
 struct pcbQueue
    {
-    PCB* vect;
-    int max;
-    int size;
+    PCB* vect;  //vector holding PCBs
+    int max;    //present max of queue
+    int size;   //present number of items in queue
    };
 
+//print the queue for debug purposes
 void print_pcb_queue(pcbQueue* self)
    {
     //variable
@@ -31,6 +51,7 @@ void print_pcb_queue(pcbQueue* self)
    }
 
 
+//allocate an array of PCB structs
 PCB* allocatePcbArr(int newSize)
    {
     PCB* newArr;
@@ -54,13 +75,14 @@ PCB* allocatePcbArr(int newSize)
    }
 
 
-
+//construct the PCB queue
 void constructPcbQueue(pcbQueue *self, int seed)
    {
     self->max = seed;
     self->vect = allocatePcbArr(seed);
     self->size = 0;
    }
+
 
 
 //safe bounds checking insert for string vector
@@ -87,6 +109,8 @@ void insPcbQ(pcbQueue *self, const PCB* src, int ndx)
     self->vect[ndx] = pcbCopy(src);
    }
 
+
+//copy the full PCB queue
 void copyPcbQueue(pcbQueue* dest, const pcbQueue* source)
    {
     int srcMax = source->max;
@@ -100,8 +124,12 @@ void copyPcbQueue(pcbQueue* dest, const pcbQueue* source)
        }
    }
 
+
+
+
 //queue functionality
 
+//enqueue one PCB
 void pcbq_enqueue(pcbQueue *self, const PCB* src)
    {
     
@@ -111,6 +139,8 @@ void pcbq_enqueue(pcbQueue *self, const PCB* src)
     
    }
 
+//dequeue one PCB
+// returns 0 when empty
 int pcbq_dequeue(pcbQueue *self, PCB* retPCB)
    {
     //variable
@@ -135,6 +165,7 @@ int pcbq_dequeue(pcbQueue *self, PCB* retPCB)
     return 1;
    }
 
+//checks if PCBqueue is empty
 int pcbq_isEmpty(const pcbQueue *self)
    {
     if(self->size == 0)
@@ -144,6 +175,9 @@ int pcbq_isEmpty(const pcbQueue *self)
 
     return 0;
    }
+
+
+//for heapsort and priority queue functionality
 
 //tree accessors
 //returns index of parent
@@ -164,6 +198,7 @@ int getRight(int parent)
     return (2*parent) + 2;
    }
 
+//swap two PCBs 
 void swap(PCB *one, PCB *other)
    {
     PCB temp;
@@ -175,6 +210,7 @@ void swap(PCB *one, PCB *other)
     *other = pcbCopy(&temp);
    }
 
+//get the index of the PCB wit the longest runtime
 int getMaxChild(const pcbQueue *self, int parent, int varSize)
    {
     //variables
@@ -193,6 +229,9 @@ int getMaxChild(const pcbQueue *self, int parent, int varSize)
 
 
 //heapsort with accessors
+
+//recursively sinks a given PCB to its appropriate place
+// in the heap
 void sink(pcbQueue* self, int root, int varSize)
    {
     //variables
@@ -222,7 +261,7 @@ void sink(pcbQueue* self, int root, int varSize)
 
    }
 
-
+//transforms standard queue into a heap
 void heapify(pcbQueue* self)
    {
     //variables
@@ -237,6 +276,8 @@ void heapify(pcbQueue* self)
 
    }
 
+//gets the runtimes of each PCB and stores them
+// as a member of each PCB
 void getRuntimes(OS* sysNfo, pcbQueue *self)
   {
    //vairables
@@ -249,6 +290,8 @@ void getRuntimes(OS* sysNfo, pcbQueue *self)
       }
   }
 
+//standard heapsort used to emulate SJF and SRTF-N
+// scheduling algorithims
 void heapsort(OS* sysNfo, pcbQueue *self)
   {
    //variable
@@ -259,7 +302,7 @@ void heapsort(OS* sysNfo, pcbQueue *self)
 
    //get runtimes every time function is called for SRJF
    getRuntimes(sysNfo, self);
-
+   
    heapify(self);
    
    if(size > 1) //account for edge case of one item

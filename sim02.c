@@ -129,7 +129,12 @@ int main(int argc, char* argv[])
     //take in config file
         //store necessary data in OS struct and variables
     constructOS(&opSys);
-    configOS(&opSys, argv[1]);  
+   
+    if(!configOS(&opSys, argv[1]))
+       {
+        puts("Error: File Not Found");
+        return 0;
+       }
 
     //run operating system
     runOS(&opSys, &clock);
@@ -165,7 +170,11 @@ int runOS(OS* opSys, SimpleTimer* sysTime)
     //get and log the time of input operations
     start(sysTime);
      
-    processmdf(opSys, &readyQ); 
+    if(!processmdf(opSys, &readyQ))
+       {
+        puts("Error: Meta Data File Not Found");
+        return 0;
+       } 
 
     getTime(sysTime, &totalTime);
     

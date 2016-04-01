@@ -1,3 +1,21 @@
+
+//Program Header Information /////////////////////////////
+/**
+  * @file fio_util.h
+  *
+  * @brief various utilities for File I/O related to the OS sim
+  *
+  * @details Defines various functions to handle Input and Output tasks
+  *          in the operating system sim
+  * 
+  * @version 1.00
+  *          Masters Student (14 March, 2016) 
+  *          Initial Implementation
+  *
+  */
+
+
+
 #include <stdio.h>
 #include <ctype.h>           //isalpha()
 #include "../lib/pcbqueue.h"  //pcbqueue struct and enqueue
@@ -55,6 +73,8 @@ instruction parseIns(char* strIns)
     return rins;
    }
 
+//retrieve and load a whole program from the
+// metadata file
 int getProgram(insQueue *programQ, FILE* fin)
    {
     //variables
@@ -70,7 +90,8 @@ int getProgram(insQueue *programQ, FILE* fin)
        {
         clearStr(&buffer);
         getInstruction(&buffer, fin);
-               
+        
+        //remove any leading endlines or spaces from instruction       
         while(!isalpha(buffer[0]))
           {
            removeLeadingChar(&buffer);
@@ -90,6 +111,7 @@ int getProgram(insQueue *programQ, FILE* fin)
     
    }
 
+//handle the input of the metadata file
 int processmdf(const OS* sysNfo, pcbQueue* readyQueue)
    {
     //variables
@@ -111,10 +133,10 @@ int processmdf(const OS* sysNfo, pcbQueue* readyQueue)
 
     mdfFile = fopen(fpath, "r");
 
-    /*add some error checking
-     *
-     */
-
+    //file open error
+    if(mdfFile == NULL){
+       return 0;
+    }
     
     //get first line as garbage
     fgets(garbage, 50, mdfFile);
