@@ -9,8 +9,12 @@
    * of linux system calls and process operations
    *
    * @version 1.00
-   * M.S. Student (03 Feb, 2015)
+   * M.S. Student (03 Feb, 2016)
    * Initial Design and Implementation of Main Driver and relevant subroutines
+   *
+   * @version 1.10
+   * M.S. Student (15 Mar, 2016)
+   * Extensive modification of main driver and main subroutines
    *
    * @note Requires stdio.h, string.h
    */
@@ -18,7 +22,7 @@
 
 //Include Files///////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
-
+//system libraries
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -82,8 +86,23 @@ void tellOSStatus(OS* opSys, float *runTime, int status);
  *
  */
 
-float getTime(SimpleTimer *clock);
+void getTime(SimpleTimer *clock, float *sysTime);
 
+/**
+ * @brief reorganize the ready queue for scheduling purposes
+ *
+ * @deatils Run a heapsort and time the sort for runtime info
+ *
+ * @param OS* opSys carries the information about the operating system
+ *
+ * @param pcbQueue* readyQ the queue of processes to be scheduled 
+ *
+ * @param float* totalTime the running simulation runtime
+ *
+ * @return the runtime from the most recent timer run
+ *
+ */
+void schedule(OS* opSys, pcbQueue* readyQ, float* totalTime);
 
 
 //Main Program Driver/////////////////////////////////////////////
@@ -124,7 +143,8 @@ int main(int argc, char* argv[])
 //Function Defitions////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
 
-int runOS(OS* opSys, SimpleTimer* sysTime){
+int runOS(OS* opSys, SimpleTimer* sysTime)
+   {
     //variables
     pcbQueue readyQ;
     PCB running;
@@ -138,38 +158,28 @@ int runOS(OS* opSys, SimpleTimer* sysTime){
     alloStr(&elapTime, 10);
 
     //output program begin
-    stop(sysTime);
-    getElapsedTime(&elapTime, sysTime);
-    totalTime += atof(elapTime);
+    getTime(sysTime, &totalTime);
     
     tellOSStatus(opSys, &totalTime, BEGIN);
 
-    //get the time of input operations
+    //get and log the time of input operations
     start(sysTime);
-    
-    
+     
     processmdf(opSys, &readyQ); 
-    
 
-    stop(sysTime);
-    getElapsedTime(&elapTime, sysTime);
-    totalTime += atof(elapTime);
+    getTime(sysTime, &totalTime);
     
     
     
-    start(sysTime);
     //arrange the queue to be ordered by shortest job
     //under circumstances of Shortest Job First and Shortest Remaining...
     if(!strcmp(opSys->schedule, "SJF") || !strcmp(opSys->schedule, "SRTF-N") )
        {
-        heapsort(opSys, &readyQ);
+        schedule(opSys, &readyQ, &totalTime);
        }
-
-    stop(sysTime);
-    getElapsedTime(&elapTime, sysTime);
-    totalTime += atof(elapTime);
+    
+    
     //output process selection
-
     tellOSStatus(opSys, &totalTime, SELECTING);
 
     start(sysTime);
@@ -177,38 +187,33 @@ int runOS(OS* opSys, SimpleTimer* sysTime){
     //run each process
     while(pcbq_dequeue(&readyQ, &running))
        {
-        stop(sysTime);
-        getElapsedTime(&elapTime, sysTime);
-        totalTime += atof(elapTime);
+        getTime(sysTime, &totalTime);
         
         runPCB(opSys, &running, &totalTime);
         
 
+        //reschedule (push into function)
         if(!pcbq_isEmpty(&readyQ))
           {
            tellOSStatus(opSys, &totalTime, SELECTING);
-           start(sysTime);
+           
            //Shortest Remaining Task First
            if(!strcmp(opSys->schedule,"SRTF-N") )
               {
-               heapsort(opSys, &readyQ);
+               schedule(opSys, &readyQ, &totalTime);
               }
-           stop(sysTime);
-           getElapsedTime(&elapTime, sysTime);
-           totalTime += atof(elapTime);
           }
 
         start(sysTime);
        }
 
     //output sim end
-    stop(sysTime);
-    getElapsedTime(&elapTime, sysTime);
-    totalTime += atof(elapTime);
+    getTime(sysTime, &totalTime);
     
     tellOSStatus(opSys, &totalTime, DONE);
 
-}
+    return 1;
+   }
 
 
 
@@ -245,3 +250,36 @@ void tellOSStatus(OS* opSys, float *runTime, int status)
 
    }
 
+void schedule(OS* opSys, pcbQueue* readyQ, float* totalTime )
+   {
+    //variables
+    SimpleTimer sortTime;
+    char* elapTime; 
+
+    //setup
+    alloStr(&elapTime, 10);
+    makeSimpleTimer(&sortTime);
+    start(&sortTime);
+
+    //Shortest Remaining Task First
+    heapsort(opSys, readyQ);
+    
+    stop(&sortTime);
+    getElapsedTime(&elapTime, &sortTime);
+    *totalTime += atof(elapTime);
+
+    free(elapTime);
+   }
+
+void getTime(SimpleTimer *clock, float* totalTime)
+    {
+     //variables
+     char* elapTime;
+
+     alloStr(&elapTime, 10);
+
+     stop(clock);
+     getElapsedTime(&elapTime, clock);
+     *totalTime += atof(elapTime);
+
+    }
