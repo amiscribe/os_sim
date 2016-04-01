@@ -182,7 +182,6 @@ void* runner(void* param)
    {
     //variables
     int *msecWait;
-    clock_t begin;
 
     //set up secWait
     msecWait = (int*) param;
@@ -244,7 +243,7 @@ int configOS(OS* self, char* configF)
        }
 
 
-    //load into OS
+    //load configuration components into OS
     strCpy(&(self->metaDatFile), lineHolder.vect[MDFILENAME]);
     strCpy(&(self->schedule), lineHolder.vect[SCHED]);
     self->pCycTime = atoi(lineHolder.vect[PCYCTIME]);      
@@ -254,6 +253,7 @@ int configOS(OS* self, char* configF)
     self->kbCycTime = atoi(lineHolder.vect[KBCYCTIME]);  
     strCpy(&(self->logFile), lineHolder.vect[LOGPATH]);
     
+    //set log configuration to enum for later checking
     if(strCmp(lineHolder.vect[LOGTO], "Log to File"))
        {
         self->logTo = FOUT;
@@ -266,7 +266,9 @@ int configOS(OS* self, char* configF)
        {
         self->logTo = BOTH;
        }
-
+    
+    
+    return 1;
    }
 
 PCB pcbCopy(const PCB *origin)
@@ -370,7 +372,6 @@ char* formatInstruction(int processId, float runTime, const instruction* insNfo,
     //variables
     char* formatBuff;
     char* pid;
-    int progAppFlag;
 
     //allocate string space
     alloStr(&formatBuff, 60);
@@ -546,7 +547,8 @@ int processInstruction(const OS* sysNfo, const instruction* pIns, float *runTime
      {
       getPresentRuntime(runTime);  
      }   
-
+    
+    return 1;
    }
 
 /*

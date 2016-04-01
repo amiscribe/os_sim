@@ -1,6 +1,8 @@
 #include <stdio.h>
-#include "../lib/pcbqueue.h"
-#include "../lib/oslib.h"
+#include <ctype.h>           //isalpha()
+#include "../lib/pcbqueue.h"  //pcbqueue struct and enqueue
+#include "../lib/oslib.h"     //OS struct and others
+
 
 const char* ENDOFSET = "A(end)0";
 const char* ENDOFSETS = "S(end)0";
@@ -58,7 +60,6 @@ int getProgram(insQueue *programQ, FILE* fin)
     //variables
     char* buffer;
     instruction tins;
-    int x = 0;
 
     //construct
     alloStr(&buffer, 20);
@@ -99,7 +100,6 @@ int processmdf(const OS* sysNfo, pcbQueue* readyQueue)
     insQueue buff_q;
     char* fpath = sysNfo->metaDatFile;    
 
-    int x = 0;
 
     //construction et al
     alloStr(&garbage, 50);

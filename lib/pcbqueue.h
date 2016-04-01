@@ -197,7 +197,6 @@ void sink(pcbQueue* self, int root, int varSize)
    {
     //variables
     int lc = getLeft(root);
-    int rc = getRight(root);
     int mc;                   //max value child
 
     PCB* parent = &(self->vect[root]);

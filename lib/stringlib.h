@@ -30,6 +30,26 @@ typedef char* string;
 
 const char NULLCHAR = '\0';
 
+//clear a dynamically allocated 
+// string of garbage
+int clearStr(char** str)
+   {
+    //variables
+    int sizeNdx;
+
+    if(*str == NULL)
+       {
+        return -1;
+       }
+
+    for( sizeNdx = 0; sizeNdx < sizeof(*str); sizeNdx++)
+        {
+         (*str)[sizeNdx] = NULLCHAR;
+        }
+
+    return 1;
+   }
+
 void alloStr(char** newStr, int size)
    {
 
@@ -186,79 +206,6 @@ int isMember(const char testChar, const char* memberString)
 
 
 
-//tokenize string
-// returns first token with string argument
-// if further tokens are desired from parseString
-// NULL should be passed
-// delimiters are removed from token
-char* tokenizeStr(char* parseString, char* delimiters)
-   {
-    //variables
-    static int ltrNdx;
-    static char* tempParse;
-    
-    char* buffString = NULL;
-    int bufferNdx = 0;      
-
-    //reset static variables for fresh call of function
-    if(parseString != NULL)
-       {
-        ltrNdx = 0;
-        strCpy(&tempParse, parseString);
-       }
-    
-    //incement past delimiters at beginning of word
-    while(isMember(tempParse[ltrNdx], delimiters))
-       {
-        ltrNdx++;
-       }
-    
-
-    //we have not reached the end of string to parse
-    if( ltrNdx < strLen(tempParse))
-       {
-            //dynamically allocate bufferString size 
-            // to not exceed size of our un-parsed string
-            buffString = (char *) calloc(strLen(tempParse)+1, sizeof(char));
-            
-            //incement past delimiters at beginning of word
-            while(isMember(tempParse[ltrNdx], delimiters))
-               {
-                ltrNdx++;
-               }
-    
-            //if a given char in string is a member of delimiters string
-            for(ltrNdx; tempParse[ltrNdx] != NULLCHAR; ltrNdx++)
-               {
-
-                //test if we have reached a delimiter
-                if(isMember(tempParse[ltrNdx], delimiters))
-                    {
-                    //break out of loop
-                    break;       
-                    }
-                
-                //store a char
-                buffString[bufferNdx] = tempParse[ltrNdx];
-                bufferNdx++;
-               }
-
-            return buffString;
-       }
-
-    else
-       {
-        //nothing left to parse
-        return NULL;
-       }
-
-   }
-
-
-
-
-
-
 //append a char to a string
 int appendChar(char** dest, char adjunct)
    {
@@ -286,25 +233,6 @@ int appendChar(char** dest, char adjunct)
 
 
 
-//clear a dynamically allocated 
-// string of garbage
-int clearStr(char** str)
-   {
-    //variables
-    int sizeNdx;
-
-    if(*str == NULL)
-       {
-        return -1;
-       }
-
-    for( sizeNdx = 0; sizeNdx < sizeof(*str); sizeNdx++)
-        {
-         (*str)[sizeNdx] = NULLCHAR;
-        }
-
-    return 1;
-   }
 
 
 

@@ -177,7 +177,6 @@ insQueue queueCopy(const insQueue* self)
     //variables
     insQueue tQ;
     node* origin = NULL;
-    node* copy = NULL;    
 
     //construct and allocate
     constructQueue(&tQ);

@@ -1,4 +1,8 @@
 #include <stdlib.h>
+#include <string.h>
+#include "stringlib.h"
+
+
 
 #ifndef STRINGVECT_H
 #define STRINGVECT_H
