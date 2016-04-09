@@ -1,0 +1,168 @@
+0.000149 - Simulator Program Starting
+0.000385 - OS: Preparing All Processes
+0.000523 - OS: Scheduling Next Process
+0.000542 - OS: starting process 3
+0.000542 - Process 3: start processing action
+0.173050 - Process 3: end processing action
+0.173050 - Process 3: start processing action
+0.284980 - Process 3: end processing action
+0.284981 - Process 3: start processing action
+0.377375 - Process 3: end processing action
+0.377375 - Process 3: start processing action
+0.549754 - Process 3: end processing action
+0.549754 - Process 3: start processing action
+0.662894 - Process 3: end processing action
+0.662894 - Process 3: start processing action
+0.739024 - Process 3: end processing action
+0.739024 - Process 3: start processing action
+0.818376 - Process 3: end processing action
+0.818376 - Process 3: start processing action
+0.956589 - Process 3: end processing action
+0.956589 - Process 3: start processing action
+1.057743 - Process 3: end processing action
+1.057743 - Process 3: start processing action
+1.149743 - Process 3: end processing action
+1.149743 - Process 3: start processing action
+1.334274 - Process 3: end processing action
+1.334274 - Process 3: start processing action
+1.486060 - Process 3: end processing action
+1.486060 - Process 3: start processing action
+1.657272 - Process 3: end processing action
+1.657272 - Process 3: start keyboard input
+2.289642 - Process 3: end keyboard input
+2.289643 - Process 3: start processing action
+2.402055 - Process 3: end processing action
+2.402055 - OS: removing process 3
+2.402055 - OS: Scheduling Next Process
+2.402159 - OS: starting process 5
+2.402160 - Process 5: start processing action
+2.534771 - Process 5: end processing action
+2.534771 - Process 5: start processing action
+2.625521 - Process 5: end processing action
+2.625521 - Process 5: start processing action
+2.768414 - Process 5: end processing action
+2.768414 - Process 5: start processing action
+2.889787 - Process 5: end processing action
+2.889787 - Process 5: start processing action
+2.982431 - Process 5: end processing action
+2.982431 - Process 5: start processing action
+3.123925 - Process 5: end processing action
+3.123925 - Process 5: start processing action
+3.303105 - Process 5: end processing action
+3.303105 - Process 5: start processing action
+3.490635 - Process 5: end processing action
+3.490635 - Process 5: start processing action
+3.631252 - Process 5: end processing action
+3.631252 - Process 5: start hard drive input
+4.211393 - Process 5: end hard drive input
+4.211393 - Process 5: start processing action
+4.371517 - Process 5: end processing action
+4.371517 - Process 5: start processing action
+4.491349 - Process 5: end processing action
+4.491349 - Process 5: start processing action
+4.641809 - Process 5: end processing action
+4.641810 - Process 5: start processing action
+4.752283 - Process 5: end processing action
+4.752283 - Process 5: start processing action
+4.853436 - Process 5: end processing action
+4.853436 - OS: removing process 5
+4.853436 - OS: Scheduling Next Process
+4.853519 - OS: starting process 2
+4.853519 - Process 2: start hard drive input
+5.584709 - Process 2: end hard drive input
+5.584709 - Process 2: start monitor output
+5.965460 - Process 2: end monitor output
+5.965460 - Process 2: start processing action
+6.107610 - Process 2: end processing action
+6.107610 - Process 2: start processing action
+6.197828 - Process 2: end processing action
+6.197828 - Process 2: start processing action
+6.381842 - Process 2: end processing action
+6.381842 - Process 2: start processing action
+6.562791 - Process 2: end processing action
+6.562791 - Process 2: start processing action
+6.723019 - Process 2: end processing action
+6.723019 - Process 2: start processing action
+6.904606 - Process 2: end processing action
+6.904606 - Process 2: start processing action
+6.984418 - Process 2: end processing action
+6.984418 - Process 2: start processing action
+7.075712 - Process 2: end processing action
+7.075712 - Process 2: start processing action
+7.208325 - Process 2: end processing action
+7.208325 - Process 2: start processing action
+7.351425 - Process 2: end processing action
+7.351425 - Process 2: start processing action
+7.492385 - Process 2: end processing action
+7.492385 - Process 2: start processing action
+7.629183 - Process 2: end processing action
+7.629183 - Process 2: start processing action
+7.707961 - Process 2: end processing action
+7.707961 - OS: removing process 2
+7.707961 - OS: Scheduling Next Process
+7.708008 - OS: starting process 1
+7.708008 - Process 1: start hard drive input
+8.193066 - Process 1: end hard drive input
+8.193067 - Process 1: start processing action
+8.353564 - Process 1: end processing action
+8.353564 - Process 1: start processing action
+8.504394 - Process 1: end processing action
+8.504394 - Process 1: start processing action
+8.655193 - Process 1: end processing action
+8.655193 - Process 1: start processing action
+8.785480 - Process 1: end processing action
+8.785480 - Process 1: start processing action
+8.907337 - Process 1: end processing action
+8.907337 - Process 1: start processing action
+9.078169 - Process 1: end processing action
+9.078169 - Process 1: start processing action
+9.190569 - Process 1: end processing action
+9.190570 - Process 1: start processing action
+9.364121 - Process 1: end processing action
+9.364121 - Process 1: start processing action
+9.493856 - Process 1: end processing action
+9.493856 - Process 1: start processing action
+9.567655 - Process 1: end processing action
+9.567655 - Process 1: start printer output
+12.627405 - Process 1: end printer output
+12.627405 - Process 1: start processing action
+12.718348 - Process 1: end processing action
+12.718349 - Process 1: start processing action
+12.900272 - Process 1: end processing action
+12.900272 - Process 1: start processing action
+13.010177 - Process 1: end processing action
+13.010177 - OS: removing process 1
+13.010177 - OS: Scheduling Next Process
+13.010192 - OS: starting process 4
+13.010192 - Process 4: start processing action
+13.161091 - Process 4: end processing action
+13.161091 - Process 4: start processing action
+13.302132 - Process 4: end processing action
+13.302132 - Process 4: start processing action
+13.432596 - Process 4: end processing action
+13.432596 - Process 4: start processing action
+13.592867 - Process 4: end processing action
+13.592867 - Process 4: start processing action
+13.733617 - Process 4: end processing action
+13.733617 - Process 4: start processing action
+13.885770 - Process 4: end processing action
+13.885770 - Process 4: start processing action
+13.986265 - Process 4: end processing action
+13.986266 - Process 4: start processing action
+14.166234 - Process 4: end processing action
+14.166234 - Process 4: start processing action
+14.266891 - Process 4: end processing action
+14.266891 - Process 4: start processing action
+14.446622 - Process 4: end processing action
+14.446622 - Process 4: start printer output
+21.490337 - Process 4: end printer output
+21.490337 - Process 4: start processing action
+21.590923 - Process 4: end processing action
+21.590923 - Process 4: start processing action
+21.751631 - Process 4: end processing action
+21.751633 - Process 4: start processing action
+21.911461 - Process 4: end processing action
+21.911461 - Process 4: start processing action
+22.062468 - Process 4: end processing action
+22.062468 - OS: removing process 4
+22.062469 - Simulator Program Ending
