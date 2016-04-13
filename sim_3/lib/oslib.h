@@ -448,6 +448,7 @@ int sumInsTime(const OS* sysNfo, const insQueue* estimQ)
     return acc;
    }
 
+
 /**
  * @brief formats the processing of instructions for output
  * 
@@ -552,7 +553,6 @@ char* formatInstruction(int processId, float runTime, const instruction* insNfo,
     return formatBuff;
    }
 
-
 /**
  * @brief handles the output as defined by the user
  *
@@ -586,7 +586,6 @@ void outputHandler(OS* opSys, char* output)
             break;
        }
    }
-
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////

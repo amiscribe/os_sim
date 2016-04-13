@@ -196,3 +196,4 @@ int logToFile(OS* opSys)
   
     return 1;
    }
+
