@@ -612,6 +612,8 @@ int processInstruction(const OS* sysNfo, const instruction* pIns, float *runTime
    {
     //variables
     int waitTime = getWaitTime(sysNfo, pIns);
+    int pWaitTime = sysNfo->pCycTime;
+    int waitCycles;
     pthread_t tid;
     pthread_attr_t attr;
     SimpleTimer runTimer;
@@ -647,8 +649,11 @@ int processInstruction(const OS* sysNfo, const instruction* pIns, float *runTime
        //start timer
        start(&runTimer);
        
-       //sleep
-       mysleep(waitTime);
+       //sleep with cycles
+       for(waitCycles = 0; waitCycles < pIns->cycles; waitCycles++)
+          {
+           mysleep(pWaitTime);
+          }
 
        //cleanup
        stop(&runTimer);
