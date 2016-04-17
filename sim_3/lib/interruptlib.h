@@ -1,5 +1,5 @@
 #include "stdlib.h"
-
+#include "string.h"
 
 typedef enum
    {
@@ -53,8 +53,8 @@ void ntrupt_copy(interrupt* dest, const interrupt* src)
         construct_interrupt(dest);
        }
 
-    dest->register_one = src->register_one;
-    dest->register_two = src->register_two;
+    strcpy(dest->register_one, src->register_one);
+    strcpy(dest->register_two, src->register_two);
 
    }
 
@@ -81,7 +81,7 @@ interrupt* construct_ntrupt_arr(int size)
    }
 
 
-//construct the vector
+//construct the queue
 void construct_ntrupt_queue(ntrupt_queue *self, int seed)
    {
     self->max = seed;
@@ -121,7 +121,7 @@ void copy_ntrupt_vect(ntrupt_queue* dest, const ntrupt_queue* source)
     //safe copy all data over to new struct
     for(cpyNdx = 0; cpyNdx < srcMax; cpyNdx++)
        {
-        insAtNdx(dest, source->vect[cpyNdx], cpyNdx);
+        ntrupt_ins_at_ndx(dest, &(source->vect[cpyNdx]), cpyNdx);
        }
    }
 
