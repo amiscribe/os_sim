@@ -630,39 +630,41 @@ int processInstruction(const OS* sysNfo, const instruction* pIns, float *runTime
     //make unique sleep thread for IO operations
     if(pIns->component == 'I' || pIns->component == 'O')
        {
+        //start timer
+        start(&runTimer);
+       
         //setup thread with default attributes
         pthread_attr_init(&attr);
         
         //create our thread
         pthread_create(&tid, &attr, runner, &waitTime);
 
-        start(&runTimer);
-        
         //wait for thread to exit
         pthread_join(tid, NULL);
-
-        stop(&runTimer);        
-        getElapsedTime(&timeStr ,&runTimer);
+       
+        //cleanup
+        stop(&runTimer);
+        getElapsedTime(&timeStr, &runTimer);
         *runTime += atof(timeStr);
         timeStr = ftoa(*runTime);
        }
     //processing case
     else if(pIns->component == 'P') 
       {
-       //start timer
-       start(&runTimer);
        
        //sleep with cycles
        for(waitCycles = 0; waitCycles < pIns->cycles; waitCycles++)
           {
+           start(&runTimer);
+           
            mysleep(pWaitTime);
+       
+           stop(&runTimer);
+           getElapsedTime(&timeStr, &runTimer);
+           *runTime += atof(timeStr);
+           timeStr = ftoa(*runTime);
           }
 
-       //cleanup
-       stop(&runTimer);
-       getElapsedTime(&timeStr, &runTimer);
-       *runTime += atof(timeStr);
-       timeStr = ftoa(*runTime);
       }
     //start and end program case
     else if(pIns->component == 'A')
@@ -687,14 +689,18 @@ int processInstruction(const OS* sysNfo, const instruction* pIns, float *runTime
  * @param float *runtime  the current runtime of the simulation
  *
  */
-void runPCB(OS* opSys, PCB* loadedPCB, float *runTime)
+int runPCB(OS* opSys, PCB* loadedPCB, float *runTime)
    {
     //variables
     char* formatOut;
+    char* timeStr;
     instruction buffer;
-    
+    SimpleTimer runTimer;
+
     //construct
     constructIns(&buffer);
+    makeSimpleTimer(&runTimer);
+    alloStr(&timeStr ,10);
 
     //update PCB state to running
     loadedPCB->pState = RUNNING;
@@ -707,9 +713,10 @@ void runPCB(OS* opSys, PCB* loadedPCB, float *runTime)
         formatOut = formatInstruction(loadedPCB->pid, *runTime, &buffer, START);
         outputHandler(opSys, formatOut);
 
+
         //process instruction
         processInstruction(opSys, &buffer, runTime);
-        
+       
         //log stop instruction if not program
         // start end notification
         formatOut = formatInstruction(loadedPCB->pid, *runTime, &buffer, END);
@@ -719,6 +726,7 @@ void runPCB(OS* opSys, PCB* loadedPCB, float *runTime)
             outputHandler(opSys, formatOut);
            }
        }
+    return TERMINATED;
   }
 
 
