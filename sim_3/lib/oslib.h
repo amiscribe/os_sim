@@ -46,13 +46,14 @@ const char ENDCONFIG[] = "End Simulator Configuration File";
 with OS config*/
 const int MDFILENAME = 1;      
 const int SCHED = 2;
-const int PCYCTIME = 3;
-const int MDTIME = 4;
-const int HDTIME = 5;
-const int PRCYCTIME = 6;
-const int KBCYCTIME = 7;
-const int LOGTO = 8;
-const int LOGPATH = 9;
+const int QUANTTIME = 3;
+const int PCYCTIME = 4;
+const int MDTIME = 5;
+const int HDTIME = 6;
+const int PRCYCTIME = 7;
+const int KBCYCTIME = 8;
+const int LOGTO = 9;
+const int LOGPATH = 10;
 
 const int START = 1;
 const int END = 0;
@@ -76,7 +77,7 @@ enum state_t
     NEW,
     READY,
     RUNNING,
-    WAITING,
+    BLOCKED,
     TERMINATED
    };
 
@@ -95,6 +96,7 @@ struct OS
    {
     char* metaDatFile;  /* Meta Data Filename */
     char* schedule;
+    int quant;          /*number of cycles for quant*/
     int pCycTime;       /* Processor Cycle Time (msec)*/
     int mDispTime;      /* Monitor Display Time (msec)*/
     int hdCycTime;      /* Hard Drive Cycle Time (msec)*/
@@ -152,6 +154,7 @@ void constructOS(OS* self)
    {
     self->metaDatFile = NULL;  
     self->schedule = NULL;
+    self->quant = 0;
     self->pCycTime = 0;     
     self->mDispTime = 0;    
     self->hdCycTime = 0;    
@@ -290,6 +293,7 @@ int configOS(OS* self, char* configF)
     //load configuration components into OS
     strCpy(&(self->metaDatFile), lineHolder.vect[MDFILENAME]);
     strCpy(&(self->schedule), lineHolder.vect[SCHED]);
+    self->quant = atoi(lineHolder.vect[QUANTTIME]);      
     self->pCycTime = atoi(lineHolder.vect[PCYCTIME]);      
     self->mDispTime = atoi(lineHolder.vect[MDTIME]);    
     self->hdCycTime = atoi(lineHolder.vect[HDTIME]);
@@ -692,6 +696,9 @@ void runPCB(OS* opSys, PCB* loadedPCB, float *runTime)
     //construct
     constructIns(&buffer);
 
+    //update PCB state to running
+    loadedPCB->pState = RUNNING;
+
     //while we still have instructions to process
     while( dequeue(&(loadedPCB->instructions), &buffer)  )
        { 
@@ -700,7 +707,7 @@ void runPCB(OS* opSys, PCB* loadedPCB, float *runTime)
         formatOut = formatInstruction(loadedPCB->pid, *runTime, &buffer, START);
         outputHandler(opSys, formatOut);
 
-        //process insctuction
+        //process instruction
         processInstruction(opSys, &buffer, runTime);
         
         //log stop instruction if not program

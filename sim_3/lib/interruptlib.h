@@ -28,7 +28,7 @@ int setCheckBus(interruptBus interruptStatus)
     
     if(interruptStatus != CHECK)
        {
-        bus = interruptStatus;
+        bus = interruptStatus;        
        }
 
     return bus;
