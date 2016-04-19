@@ -161,6 +161,7 @@ int runOS(OS* opSys, SimpleTimer* sysTime)
    {
     //variables
     pcbQueue readyQ;
+    pcbQueue blockedQ;
     PCB running;
     insQueue q;
     char* elapTime;
@@ -212,7 +213,16 @@ int runOS(OS* opSys, SimpleTimer* sysTime)
         runPCB(opSys, &running, &totalTime);
         
 
-        //reschedule (push into function)
+        //if runPCB returns blocked status
+
+            //declare blocked for IO
+
+            //update pcb state to blocked
+
+            //push blocked PCB onto blocked q
+
+
+        //reschedule
         if(!pcbq_isEmpty(&readyQ))
           {
            tellOSStatus(opSys, &totalTime, SELECTING);
