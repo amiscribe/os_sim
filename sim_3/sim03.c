@@ -161,14 +161,17 @@ int runOS(OS* opSys, SimpleTimer* sysTime)
    {
     //variables
     pcbQueue readyQ;
+    pcbQueue blockVect;
     PCB running;
     insQueue q;
     char* elapTime;
     float totalTime = 0.0;
+    state_t processState;
 
     //constructions
     constructQueue(&q);
     constructPcbQueue(&readyQ, 10);
+    constructPcbQueue(&blockVect, 10);
     alloStr(&elapTime, 10);
 
     //output program begin
@@ -205,14 +208,24 @@ int runOS(OS* opSys, SimpleTimer* sysTime)
     start(sysTime);
     
     //run each process
+    //while the pcbqueue isn't empty or the blocked queue is not empty
     while(pcbq_dequeue(&readyQ, &running))
        {
         getTime(sysTime, &totalTime);
         
-        runPCB(opSys, &running, &totalTime);
+        processState = runPCB(opSys, &running, &totalTime);
         
 
-        //reschedule (push into function)
+        //if runPCB returns blocked status
+        
+            //declare blocked for IO
+
+            //update pcb state to blocked
+
+            //push blocked PCB onto blocked vector
+
+
+        //reschedule
         if(!pcbq_isEmpty(&readyQ))
           {
            tellOSStatus(opSys, &totalTime, SELECTING);
@@ -234,6 +247,7 @@ int runOS(OS* opSys, SimpleTimer* sysTime)
 
     return 1;
    }
+
 
 void tellOSStatus(OS* opSys, float *runTime, int status)
    {
@@ -290,6 +304,7 @@ void schedule(OS* opSys, pcbQueue* readyQ, float* totalTime )
 
     free(elapTime);
    }
+
 
 void getTime(SimpleTimer *clock, float* totalTime)
     {

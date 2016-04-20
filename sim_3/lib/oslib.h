@@ -31,6 +31,7 @@
 #include "./c_ins_queue.h"
 #include "./stringvect.h"
 #include "../util/SimpleTimer.h"
+#include "./interruptlib.h"
 
 #ifndef OSLIB_H
 #define OSLIB_H
@@ -46,13 +47,14 @@ const char ENDCONFIG[] = "End Simulator Configuration File";
 with OS config*/
 const int MDFILENAME = 1;      
 const int SCHED = 2;
-const int PCYCTIME = 3;
-const int MDTIME = 4;
-const int HDTIME = 5;
-const int PRCYCTIME = 6;
-const int KBCYCTIME = 7;
-const int LOGTO = 8;
-const int LOGPATH = 9;
+const int QUANTTIME = 3;
+const int PCYCTIME = 4;
+const int MDTIME = 5;
+const int HDTIME = 6;
+const int PRCYCTIME = 7;
+const int KBCYCTIME = 8;
+const int LOGTO = 9;
+const int LOGPATH = 10;
 
 const int START = 1;
 const int END = 0;
@@ -76,7 +78,7 @@ enum state_t
     NEW,
     READY,
     RUNNING,
-    WAITING,
+    BLOCKED,
     TERMINATED
    };
 
@@ -95,6 +97,7 @@ struct OS
    {
     char* metaDatFile;  /* Meta Data Filename */
     char* schedule;
+    int quant;          /*number of cycles for quant*/
     int pCycTime;       /* Processor Cycle Time (msec)*/
     int mDispTime;      /* Monitor Display Time (msec)*/
     int hdCycTime;      /* Hard Drive Cycle Time (msec)*/
@@ -102,8 +105,11 @@ struct OS
     int kbCycTime;      /* Keyboard Cycle Time (msec)*/
     float timeAcc;
     char* logFile;
+    
     trilog logTo;
     strVect runtimeLog;            //log of simulator activity
+
+    ntrupt_queue interrupts;       //the "global" interrupt queue
    };
 
 
@@ -116,7 +122,12 @@ struct PCB
     int time;                     //total runtime for SJF and SRJF scheduling
    };
 
-
+//thread passing struct
+typedef struct
+   {
+    int pid;                      //pid associated with instruction
+    int wait;                     //wait time for a given intruction
+   } ioArgs;
 
 /////////////////////////////////////////////////////////////////
 //Constructors///////////////////////////////////////////////////
@@ -152,6 +163,7 @@ void constructOS(OS* self)
    {
     self->metaDatFile = NULL;  
     self->schedule = NULL;
+    self->quant = 0;
     self->pCycTime = 0;     
     self->mDispTime = 0;    
     self->hdCycTime = 0;    
@@ -161,10 +173,8 @@ void constructOS(OS* self)
     self->logFile = NULL;
     self->logTo = MONITOR; 
     constructVect(&(self->runtimeLog), 10);
+    construct_ntrupt_queue(&(self->interrupts), 10);
    }
-
-
-
 
 
 
@@ -205,18 +215,27 @@ void mysleep(int msec)
 void* runner(void* param)
    {
     //variables
-    int *msecWait;
+    ioArgs bundle;
+    int msecWait;
 
     //set up secWait
-    msecWait = (int*) param;
-   
+    //extract waittime from bundle
+    bundle = (* (ioArgs*) (param));
+    msecWait = bundle.wait;
+
+printf("%i", bundle.wait);
+puts("");
+printf("%i", bundle.pid);
+puts("");
+
     //call mysleep
-    mysleep(*msecWait);
+    mysleep(msecWait);
 
     //exit
     pthread_exit(0);
 
    }
+
 
 
 /**
@@ -290,6 +309,7 @@ int configOS(OS* self, char* configF)
     //load configuration components into OS
     strCpy(&(self->metaDatFile), lineHolder.vect[MDFILENAME]);
     strCpy(&(self->schedule), lineHolder.vect[SCHED]);
+    self->quant = atoi(lineHolder.vect[QUANTTIME]);      
     self->pCycTime = atoi(lineHolder.vect[PCYCTIME]);      
     self->mDispTime = atoi(lineHolder.vect[MDTIME]);    
     self->hdCycTime = atoi(lineHolder.vect[HDTIME]);
@@ -448,6 +468,7 @@ int sumInsTime(const OS* sysNfo, const insQueue* estimQ)
     return acc;
    }
 
+
 /**
  * @brief formats the processing of instructions for output
  * 
@@ -552,7 +573,6 @@ char* formatInstruction(int processId, float runTime, const instruction* insNfo,
     return formatBuff;
    }
 
-
 /**
  * @brief handles the output as defined by the user
  *
@@ -589,6 +609,7 @@ void outputHandler(OS* opSys, char* output)
 
 
 
+
 ////////////////////////////////////////////////////////////////////////////////////////////////
 //Runtime Handlers//////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -608,19 +629,20 @@ void outputHandler(OS* opSys, char* output)
  * @return int sucessful process
  */
 
-int processInstruction(const OS* sysNfo, const instruction* pIns, float *runTime)
+int processInstruction(const OS* sysNfo, const instruction* pIns, ioArgs *bundle)
    {
     //variables
-    int waitTime = getWaitTime(sysNfo, pIns);
+    int pWaitTime = sysNfo->pCycTime;
+    int waitCycles;
     pthread_t tid;
     pthread_attr_t attr;
-    SimpleTimer runTimer;
-    char* timeStr;
     
+    bundle->wait = getWaitTime(sysNfo, pIns);
 
-    //construct variables
-    makeSimpleTimer(&runTimer);
-    alloStr(&timeStr, 10);
+printf("%i", bundle->wait);
+puts("");
+printf("%i", bundle->pid);
+puts("");
     
     //make unique sleep thread for IO operations
     if(pIns->component == 'I' || pIns->component == 'O')
@@ -629,37 +651,28 @@ int processInstruction(const OS* sysNfo, const instruction* pIns, float *runTime
         pthread_attr_init(&attr);
         
         //create our thread
-        pthread_create(&tid, &attr, runner, &waitTime);
+        pthread_create(&tid, &attr, runner, &bundle);
 
-        start(&runTimer);
+//        return BLOCKED;
         
-        //wait for thread to exit
-        pthread_join(tid, NULL);
-
-        stop(&runTimer);        
-        getElapsedTime(&timeStr ,&runTimer);
-        *runTime += atof(timeStr);
-        timeStr = ftoa(*runTime);
+       pthread_join(tid, NULL);
+       
        }
     //processing case
     else if(pIns->component == 'P') 
       {
-       //start timer
-       start(&runTimer);
        
-       //sleep
-       mysleep(waitTime);
+       //sleep with cycles
+       for(waitCycles = 0; waitCycles < pIns->cycles; waitCycles++)
+          {
+           mysleep(pWaitTime);
+          }
 
-       //cleanup
-       stop(&runTimer);
-       getElapsedTime(&timeStr, &runTimer);
-       *runTime += atof(timeStr);
-       timeStr = ftoa(*runTime);
       }
     //start and end program case
     else if(pIns->component == 'A')
      {
-      getPresentRuntime(runTime);  
+      return 1;
      }   
     
     return 1;
@@ -679,14 +692,25 @@ int processInstruction(const OS* sysNfo, const instruction* pIns, float *runTime
  * @param float *runtime  the current runtime of the simulation
  *
  */
-void runPCB(OS* opSys, PCB* loadedPCB, float *runTime)
+int runPCB(OS* opSys, PCB* loadedPCB, float *runTime)
    {
     //variables
     char* formatOut;
+    char* timeStr;
+    state_t procState;
     instruction buffer;
-    
+    SimpleTimer runTimer;
+    ioArgs bundle;
+
     //construct
     constructIns(&buffer);
+    makeSimpleTimer(&runTimer);
+    alloStr(&timeStr ,10);
+    
+    bundle.pid = loadedPCB->pid;
+
+    //update PCB state to running
+    loadedPCB->pState = RUNNING;
 
     //while we still have instructions to process
     while( dequeue(&(loadedPCB->instructions), &buffer)  )
@@ -696,9 +720,27 @@ void runPCB(OS* opSys, PCB* loadedPCB, float *runTime)
         formatOut = formatInstruction(loadedPCB->pid, *runTime, &buffer, START);
         outputHandler(opSys, formatOut);
 
-        //process insctuction
-        processInstruction(opSys, &buffer, runTime);
+
+        //instruction timer 
+        start(&runTimer);
+
+
+        //process instruction
+        procState = processInstruction(opSys, &buffer, &bundle);
+       
+
+        //end intruction timer
+        stop(&runTimer);
+        getElapsedTime(&timeStr, &runTimer);
+        *runTime += atof(timeStr);
+        timeStr = ftoa(*runTime);
         
+
+        if(procState == BLOCKED)
+           {
+            return BLOCKED;
+           }
+  
         //log stop instruction if not program
         // start end notification
         formatOut = formatInstruction(loadedPCB->pid, *runTime, &buffer, END);
@@ -708,8 +750,8 @@ void runPCB(OS* opSys, PCB* loadedPCB, float *runTime)
             outputHandler(opSys, formatOut);
            }
        }
+    return TERMINATED;
   }
-
 
 
 #endif /*pcblib.h*/

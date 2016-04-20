@@ -1,5 +1,7 @@
 #include <stdio.h>
-
+#include "interruptlib.h"
+#include "string.h"
+/*
 void prntArr(int arr[], int size){
 
    for(int i = 0; i < size; i++){
@@ -83,16 +85,64 @@ void heapsort(int arr[], int size){
   }
 
 }
+*/
 
 int main(){
 
-int i[] = {4,6,7,3,2,1,100,15,17,32,47,8,12};
-int size = 13;
+interrupt rupt;
+interrupt rupt2;
+ntrupt_queue q; 
 
-heapsort(i, 13);
+construct_interrupt( &rupt );
+construct_interrupt( &rupt2 );
+construct_ntrupt_queue(&q, 5);
 
-prntArr(i, 13);
 
+
+strcpy(rupt.register_one, "io");
+
+strcpy(rupt.register_two, "from keyboard");
+
+ntrupt_enqueue(&q, &rupt);
+
+strcpy(rupt.register_one, "blerk");
+
+strcpy(rupt.register_two, "bork");
+
+ntrupt_enqueue(&q, &rupt);
+
+
+ntrupt_dequeue(&q, &rupt2);
+puts(rupt2.register_one);
+puts(rupt2.register_two);
+
+ntrupt_dequeue(&q, &rupt2);
+puts(rupt2.register_one);
+puts(rupt2.register_two);
+
+if(setCheckBus(CHECK) == 0)
+{
+ puts("no interrupt");
+}
+
+setCheckBus(HIGH);
+
+if(setCheckBus(CHECK) == 1)
+{
+ puts("interrupt");
+ setCheckBus(LOW);
+}
+
+if(setCheckBus(CHECK) == 0)
+{
+ puts("no interrupt");
+}
+
+if(setCheckBus(CHECK) == 1)
+{
+ puts("interrupt");
+ setCheckBus(LOW);
+}
 
 return 0;
 }

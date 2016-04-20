@@ -126,10 +126,7 @@ int processmdf(const OS* sysNfo, pcbQueue* readyQueue)
     //construction et al
     alloStr(&garbage, 50);
     constructQueue(&buff_q);
-
     constructPCB(&pcbuff, &buff_q, -1);
-    
-
 
     mdfFile = fopen(fpath, "r");
 
@@ -148,9 +145,12 @@ int processmdf(const OS* sysNfo, pcbQueue* readyQueue)
 
     while(getProgram(&buff_q, mdfFile))
        {
-        //linking queue with new pcb
+        //linking instruction queue with new pcb
         constructPCB(&pcbuff, &buff_q, pid);
         pcbuff.time = sumInsTime(sysNfo, &buff_q); 
+        
+        //set PCB state as ready
+        pcbuff.pState = READY;
 
         pcbq_enqueue(readyQueue, &pcbuff);
         
@@ -196,3 +196,4 @@ int logToFile(OS* opSys)
   
     return 1;
    }
+
