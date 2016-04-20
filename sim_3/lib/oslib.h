@@ -223,11 +223,6 @@ void* runner(void* param)
     bundle = (* (ioArgs*) (param));
     msecWait = bundle.wait;
 
-printf("%i", bundle.wait);
-puts("");
-printf("%i", bundle.pid);
-puts("");
-
     //call mysleep
     mysleep(msecWait);
 
@@ -638,24 +633,20 @@ int processInstruction(const OS* sysNfo, const instruction* pIns, ioArgs *bundle
     pthread_attr_t attr;
     
     bundle->wait = getWaitTime(sysNfo, pIns);
-
-printf("%i", bundle->wait);
-puts("");
-printf("%i", bundle->pid);
-puts("");
     
     //make unique sleep thread for IO operations
     if(pIns->component == 'I' || pIns->component == 'O')
        {
+
         //setup thread with default attributes
         pthread_attr_init(&attr);
         
         //create our thread
-        pthread_create(&tid, &attr, runner, &bundle);
+        pthread_create(&tid, &attr, runner, bundle);
 
-//        return BLOCKED;
+    //    return BLOCKED;
         
-       pthread_join(tid, NULL);
+        pthread_join(tid, NULL);
        
        }
     //processing case
