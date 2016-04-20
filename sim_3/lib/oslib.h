@@ -592,6 +592,8 @@ void outputHandler(OS* opSys, char* output)
    }
 
 
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////////
 //Runtime Handlers//////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -611,7 +613,7 @@ void outputHandler(OS* opSys, char* output)
  * @return int sucessful process
  */
 
-int processInstruction(const OS* sysNfo, const instruction* pIns, float *runTime)
+int processInstruction(const OS* sysNfo, const instruction* pIns)
    {
     //variables
     int waitTime = getWaitTime(sysNfo, pIns);
@@ -619,34 +621,23 @@ int processInstruction(const OS* sysNfo, const instruction* pIns, float *runTime
     int waitCycles;
     pthread_t tid;
     pthread_attr_t attr;
-    SimpleTimer runTimer;
-    char* timeStr;
     
 
-    //construct variables
-    makeSimpleTimer(&runTimer);
-    alloStr(&timeStr, 10);
     
     //make unique sleep thread for IO operations
     if(pIns->component == 'I' || pIns->component == 'O')
        {
-        //start timer
-        start(&runTimer);
-       
         //setup thread with default attributes
         pthread_attr_init(&attr);
         
         //create our thread
         pthread_create(&tid, &attr, runner, &waitTime);
 
+        return BLOCKED;
+
         //wait for thread to exit
-        pthread_join(tid, NULL);
+//        pthread_join(tid, NULL);
        
-        //cleanup
-        stop(&runTimer);
-        getElapsedTime(&timeStr, &runTimer);
-        *runTime += atof(timeStr);
-        timeStr = ftoa(*runTime);
        }
     //processing case
     else if(pIns->component == 'P') 
@@ -655,21 +646,14 @@ int processInstruction(const OS* sysNfo, const instruction* pIns, float *runTime
        //sleep with cycles
        for(waitCycles = 0; waitCycles < pIns->cycles; waitCycles++)
           {
-           start(&runTimer);
-           
            mysleep(pWaitTime);
-       
-           stop(&runTimer);
-           getElapsedTime(&timeStr, &runTimer);
-           *runTime += atof(timeStr);
-           timeStr = ftoa(*runTime);
           }
 
       }
     //start and end program case
     else if(pIns->component == 'A')
      {
-      getPresentRuntime(runTime);  
+      return 1;
      }   
     
     return 1;
@@ -694,6 +678,7 @@ int runPCB(OS* opSys, PCB* loadedPCB, float *runTime)
     //variables
     char* formatOut;
     char* timeStr;
+    state_t procState;
     instruction buffer;
     SimpleTimer runTimer;
 
@@ -714,9 +699,26 @@ int runPCB(OS* opSys, PCB* loadedPCB, float *runTime)
         outputHandler(opSys, formatOut);
 
 
+        //instruction timer 
+        start(&runTimer);
+
+
         //process instruction
-        processInstruction(opSys, &buffer, runTime);
+        procState = processInstruction(opSys, &buffer);
        
+
+        //end intruction timer
+        stop(&runTimer);
+        getElapsedTime(&timeStr, &runTimer);
+        *runTime += atof(timeStr);
+        timeStr = ftoa(*runTime);
+        
+
+        if(procState == BLOCKED)
+           {
+            return BLOCKED;
+           }
+  
         //log stop instruction if not program
         // start end notification
         formatOut = formatInstruction(loadedPCB->pid, *runTime, &buffer, END);

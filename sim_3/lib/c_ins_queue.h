@@ -95,7 +95,49 @@ int isEmpty(insQueue queue)
     return FALSE;
    }
 
+//push instruction back to front of queue
+int push(insQueue *self, instruction data)
+   {
+    //variables
+    node *temp = NULL; 
 
+    if( isEmpty(*self) )
+       {
+        //allocate data for a new front node
+        temp = (node *) malloc( sizeof(node) );
+        
+        //error checking in case allocate failed
+        if(temp == NULL)
+           {
+            return ERROR;
+           }
+        
+        
+        copyInstruction( &(temp->ins), data);
+        temp->next = NULL;    
+ 
+        self->front = temp;
+        self->rear = temp;        
+       }
+
+    else
+       {
+        //allocate data for a new front node
+        temp = (node *) malloc( sizeof(node) );
+        
+        //error checking in case allocate failed
+        if(temp == NULL)
+           {
+            return ERROR;
+           }
+        
+        copyInstruction( &(temp->ins), data);
+        temp->next = self->front;
+
+        self->front = temp;    
+       }
+    
+   }
 
 //enqueue instruction at rear of queue
 // queue must be constructed
