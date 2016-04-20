@@ -118,7 +118,12 @@ struct PCB
     int time;                     //total runtime for SJF and SRJF scheduling
    };
 
-
+//thread passing struct
+typedef struct
+   {
+    int pid;
+    int wait;
+   } ioArgs;
 
 /////////////////////////////////////////////////////////////////
 //Constructors///////////////////////////////////////////////////
@@ -169,9 +174,6 @@ void constructOS(OS* self)
 
 
 
-
-
-
 ///////////////////////////////////////////////////////
 //Utilities////////////////////////////////////////////
 ///////////////////////////////////////////////////////
@@ -208,18 +210,22 @@ void mysleep(int msec)
 void* runner(void* param)
    {
     //variables
-    int *msecWait;
+    ioArgs* bundle;
+    int msecWait;
 
     //set up secWait
-    msecWait = (int*) param;
-   
+    //extract waittime from bundle
+    bundle = (ioArgs*) param;
+    msecWait = bundle->wait;
+
     //call mysleep
-    mysleep(*msecWait);
+    mysleep(msecWait);
 
     //exit
     pthread_exit(0);
 
    }
+
 
 
 /**
@@ -613,15 +619,15 @@ void outputHandler(OS* opSys, char* output)
  * @return int sucessful process
  */
 
-int processInstruction(const OS* sysNfo, const instruction* pIns)
+int processInstruction(const OS* sysNfo, const instruction* pIns, ioArgs *bundle)
    {
     //variables
-    int waitTime = getWaitTime(sysNfo, pIns);
     int pWaitTime = sysNfo->pCycTime;
     int waitCycles;
     pthread_t tid;
     pthread_attr_t attr;
     
+    bundle->wait = getWaitTime(sysNfo, pIns);
 
     
     //make unique sleep thread for IO operations
@@ -631,12 +637,9 @@ int processInstruction(const OS* sysNfo, const instruction* pIns)
         pthread_attr_init(&attr);
         
         //create our thread
-        pthread_create(&tid, &attr, runner, &waitTime);
+        pthread_create(&tid, &attr, runner, &bundle);
 
         return BLOCKED;
-
-        //wait for thread to exit
-//        pthread_join(tid, NULL);
        
        }
     //processing case
@@ -681,11 +684,13 @@ int runPCB(OS* opSys, PCB* loadedPCB, float *runTime)
     state_t procState;
     instruction buffer;
     SimpleTimer runTimer;
+    ioArgs procIdent;
 
     //construct
     constructIns(&buffer);
     makeSimpleTimer(&runTimer);
     alloStr(&timeStr ,10);
+    procIdent.pid = loadedPCB->pid;
 
     //update PCB state to running
     loadedPCB->pState = RUNNING;
@@ -704,7 +709,7 @@ int runPCB(OS* opSys, PCB* loadedPCB, float *runTime)
 
 
         //process instruction
-        procState = processInstruction(opSys, &buffer);
+        procState = processInstruction(opSys, &buffer, &procIdent);
        
 
         //end intruction timer
