@@ -107,9 +107,21 @@ void insPcbQ(pcbQueue *self, const PCB* src, int ndx)
        }
 
     self->vect[ndx] = pcbCopy(src);
+    self->size++;
    }
 
+//remove from pcbQueue at ndx
+PCB rmPcb(pcbQueue *self, int ndx)
+  {
+   PCB temp;
 
+   temp = pcbCopy((&(self->vect)[ndx]));
+
+   self->size--;
+
+   return temp;
+
+  }
 //copy the full PCB queue
 void copyPcbQueue(pcbQueue* dest, const pcbQueue* source)
    {
@@ -135,7 +147,6 @@ void pcbq_enqueue(pcbQueue *self, const PCB* src)
     
     //use insert at ndx and iterate size member
     insPcbQ(self, src, self->size);
-    self->size++;
     
    }
 

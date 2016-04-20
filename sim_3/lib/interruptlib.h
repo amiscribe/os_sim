@@ -1,6 +1,11 @@
 #include "stdlib.h"
 #include "string.h"
 
+#ifndef INTERRUPTLIB_H 
+#define INTERRUPTLIB_H
+
+const int DEF = -1;
+
 typedef enum
    {
     LOW,
@@ -10,7 +15,7 @@ typedef enum
 
 typedef struct
    { 
-    char* register_one; //what threw interrupt 
+    int register_one; //what process threw int (-1 for os)
     char* register_two; //why it threw interrupt
    } interrupt;
 
@@ -20,6 +25,7 @@ typedef struct
     int max;
     int size;
    } ntrupt_queue;
+
 
 
 int setCheckBus(interruptBus interruptStatus)
@@ -37,9 +43,11 @@ int setCheckBus(interruptBus interruptStatus)
 
 void construct_interrupt(interrupt* self)
    {
-    self->register_one = malloc(20 * sizeof(char));
+    self->register_one = DEF;
     self->register_two = malloc(60 * sizeof(char));
    }
+
+
 
 void ntrupt_copy(interrupt* dest, const interrupt* src)
    {
@@ -53,7 +61,7 @@ void ntrupt_copy(interrupt* dest, const interrupt* src)
         construct_interrupt(dest);
        }
 
-    strcpy(dest->register_one, src->register_one);
+    dest->register_one = src->register_one;
     strcpy(dest->register_two, src->register_two);
 
    }
@@ -158,4 +166,7 @@ int ntrupt_dequeue(ntrupt_queue *self, interrupt* dest)
 
     self->size--;
     return 1;
+  
    }
+
+#endif

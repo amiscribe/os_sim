@@ -31,6 +31,7 @@
 #include "./c_ins_queue.h"
 #include "./stringvect.h"
 #include "../util/SimpleTimer.h"
+#include "./interruptlib.h"
 
 #ifndef OSLIB_H
 #define OSLIB_H
@@ -104,8 +105,11 @@ struct OS
     int kbCycTime;      /* Keyboard Cycle Time (msec)*/
     float timeAcc;
     char* logFile;
+    
     trilog logTo;
     strVect runtimeLog;            //log of simulator activity
+
+    ntrupt_queue interrupts;       //the "global" interrupt queue
    };
 
 
@@ -121,8 +125,8 @@ struct PCB
 //thread passing struct
 typedef struct
    {
-    int pid;
-    int wait;
+    int pid;                      //pid associated with instruction
+    int wait;                     //wait time for a given intruction
    } ioArgs;
 
 /////////////////////////////////////////////////////////////////
@@ -169,6 +173,7 @@ void constructOS(OS* self)
     self->logFile = NULL;
     self->logTo = MONITOR; 
     constructVect(&(self->runtimeLog), 10);
+    construct_ntrupt_queue(&(self->interrupts), 10);
    }
 
 
@@ -210,13 +215,18 @@ void mysleep(int msec)
 void* runner(void* param)
    {
     //variables
-    ioArgs* bundle;
+    ioArgs bundle;
     int msecWait;
 
     //set up secWait
     //extract waittime from bundle
-    bundle = (ioArgs*) param;
-    msecWait = bundle->wait;
+    bundle = (* (ioArgs*) (param));
+    msecWait = bundle.wait;
+
+printf("%i", bundle.wait);
+puts("");
+printf("%i", bundle.pid);
+puts("");
 
     //call mysleep
     mysleep(msecWait);
@@ -629,6 +639,10 @@ int processInstruction(const OS* sysNfo, const instruction* pIns, ioArgs *bundle
     
     bundle->wait = getWaitTime(sysNfo, pIns);
 
+printf("%i", bundle->wait);
+puts("");
+printf("%i", bundle->pid);
+puts("");
     
     //make unique sleep thread for IO operations
     if(pIns->component == 'I' || pIns->component == 'O')
@@ -639,7 +653,9 @@ int processInstruction(const OS* sysNfo, const instruction* pIns, ioArgs *bundle
         //create our thread
         pthread_create(&tid, &attr, runner, &bundle);
 
-        return BLOCKED;
+//        return BLOCKED;
+        
+       pthread_join(tid, NULL);
        
        }
     //processing case
@@ -684,13 +700,14 @@ int runPCB(OS* opSys, PCB* loadedPCB, float *runTime)
     state_t procState;
     instruction buffer;
     SimpleTimer runTimer;
-    ioArgs procIdent;
+    ioArgs bundle;
 
     //construct
     constructIns(&buffer);
     makeSimpleTimer(&runTimer);
     alloStr(&timeStr ,10);
-    procIdent.pid = loadedPCB->pid;
+    
+    bundle.pid = loadedPCB->pid;
 
     //update PCB state to running
     loadedPCB->pState = RUNNING;
@@ -709,7 +726,7 @@ int runPCB(OS* opSys, PCB* loadedPCB, float *runTime)
 
 
         //process instruction
-        procState = processInstruction(opSys, &buffer, &procIdent);
+        procState = processInstruction(opSys, &buffer, &bundle);
        
 
         //end intruction timer
