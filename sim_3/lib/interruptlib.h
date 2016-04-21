@@ -47,6 +47,11 @@ void construct_interrupt(interrupt* self)
     self->register_two = malloc(60 * sizeof(char));
    }
 
+void load_interrupt(interrupt* self, int where, char* what)
+   {
+    self->register_one = where;
+    strcpy(self->register_two, what);
+   }
 
 
 void ntrupt_copy(interrupt* dest, const interrupt* src)
@@ -60,6 +65,9 @@ void ntrupt_copy(interrupt* dest, const interrupt* src)
        {
         construct_interrupt(dest);
        }
+
+printf("%i", src->register_one);
+puts("");
 
     dest->register_one = src->register_one;
     strcpy(dest->register_two, src->register_two);

@@ -127,6 +127,7 @@ typedef struct
    {
     int pid;                      //pid associated with instruction
     int wait;                     //wait time for a given intruction
+    ntrupt_queue* interruptQ;     //interrupt queue holding io operations
    } ioArgs;
 
 /////////////////////////////////////////////////////////////////
@@ -217,6 +218,13 @@ void* runner(void* param)
     //variables
     ioArgs bundle;
     int msecWait;
+    interrupt ioComplete;
+
+    ntrupt_queue temp;
+
+    //construct
+    construct_interrupt(&ioComplete);
+    construct_ntrupt_queue(&temp, 10);
 
     //set up secWait
     //extract waittime from bundle
@@ -225,6 +233,18 @@ void* runner(void* param)
 
     //call mysleep
     mysleep(msecWait);
+    
+    //load interrupt and store in queue
+    load_interrupt(&ioComplete, bundle.pid, "IO Complete"); //modify to reflect what type of i/o this was
+
+puts("");
+printf("%i", bundle.pid);    
+puts("");
+
+    ntrupt_enqueue(&temp, &ioComplete);
+
+    //throw interrupt signal
+    setCheckBus(HIGH);
 
     //exit
     pthread_exit(0);
@@ -624,7 +644,7 @@ void outputHandler(OS* opSys, char* output)
  * @return int sucessful process
  */
 
-int processInstruction(const OS* sysNfo, const instruction* pIns, ioArgs *bundle)
+int processInstruction(OS* sysNfo, const instruction* pIns, ioArgs *message)
    {
     //variables
     int pWaitTime = sysNfo->pCycTime;
@@ -632,8 +652,9 @@ int processInstruction(const OS* sysNfo, const instruction* pIns, ioArgs *bundle
     pthread_t tid;
     pthread_attr_t attr;
     
-    bundle->wait = getWaitTime(sysNfo, pIns);
-    
+    message->wait = getWaitTime(sysNfo, pIns);
+    message->interruptQ = &(sysNfo->interrupts);    
+
     //make unique sleep thread for IO operations
     if(pIns->component == 'I' || pIns->component == 'O')
        {
@@ -642,11 +663,11 @@ int processInstruction(const OS* sysNfo, const instruction* pIns, ioArgs *bundle
         pthread_attr_init(&attr);
         
         //create our thread
-        pthread_create(&tid, &attr, runner, bundle);
+        pthread_create(&tid, &attr, runner, message);
 
-    //    return BLOCKED;
+        return BLOCKED;
         
-        pthread_join(tid, NULL);
+    //    pthread_join(tid, NULL);
        
        }
     //processing case
@@ -691,14 +712,15 @@ int runPCB(OS* opSys, PCB* loadedPCB, float *runTime)
     state_t procState;
     instruction buffer;
     SimpleTimer runTimer;
-    ioArgs bundle;
+    ioArgs ioThreadMsg;
 
     //construct
     constructIns(&buffer);
     makeSimpleTimer(&runTimer);
     alloStr(&timeStr ,10);
     
-    bundle.pid = loadedPCB->pid;
+    //load current process id into bundle in case of i/o operations
+    ioThreadMsg.pid = loadedPCB->pid;
 
     //update PCB state to running
     loadedPCB->pState = RUNNING;
@@ -717,7 +739,7 @@ int runPCB(OS* opSys, PCB* loadedPCB, float *runTime)
 
 
         //process instruction
-        procState = processInstruction(opSys, &buffer, &bundle);
+        procState = processInstruction(opSys, &buffer, &ioThreadMsg);
        
 
         //end intruction timer

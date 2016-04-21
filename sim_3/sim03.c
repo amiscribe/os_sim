@@ -33,6 +33,7 @@
 #include "lib/oslib.h"
 #include "util/fio_util.h"
 #include "lib/stringvect.h"
+#include "lib/interruptlib.h"
 
 
 //Global Constants & Structs//////////////////////////////////////
@@ -163,23 +164,28 @@ int runOS(OS* opSys, SimpleTimer* sysTime)
     pcbQueue readyQ;
     pcbQueue blockVect;
     PCB running;
+    PCB transfer;
+    interrupt temp;
     insQueue q;
     char* elapTime;
     float totalTime = 0.0;
     state_t processState;
+    
+    int flag = 1;
 
     //constructions
     constructQueue(&q);
     constructPcbQueue(&readyQ, 10);
     constructPcbQueue(&blockVect, 10);
     alloStr(&elapTime, 10);
+    construct_interrupt(&temp);
 
     //output program begin
     getTime(sysTime, &totalTime);
     
     tellOSStatus(opSys, &totalTime, BEGIN);
 
-    //get and log the time of input operations
+    //get and log the time of input operationsgit push to a remote branch
     start(sysTime);
      
     if(!processmdf(opSys, &readyQ))
@@ -209,7 +215,7 @@ int runOS(OS* opSys, SimpleTimer* sysTime)
     
     //run each process
     //while the pcbqueue isn't empty or the blocked queue is not empty
-    while(pcbq_dequeue(&readyQ, &running))
+    while(pcbq_dequeue(&readyQ, &running) || !pcbq_isEmpty(&blockVect))
        {
         getTime(sysTime, &totalTime);
         
@@ -217,12 +223,43 @@ int runOS(OS* opSys, SimpleTimer* sysTime)
         
 
         //if runPCB returns blocked status
-        
+        if(processState == BLOCKED)
+           {
             //declare blocked for IO
+            puts("Blocked for IO");                                                  //temporary
 
             //update pcb state to blocked
+            running.pState = BLOCKED;
 
             //push blocked PCB onto blocked vector
+            //organize by pid
+            insPcbQ(&blockVect, &running, running.pid);
+           }
+        
+        //case where all processes are blocked
+        if(pcbq_isEmpty(&readyQ) && !pcbq_isEmpty(&blockVect))
+           {
+            puts("All processes blocked");                                                                //temporary
+
+            //sleep until interrupt comes
+            while(flag == 1){
+                mysleep(10);
+                if(setCheckBus(CHECK) == HIGH){
+                    flag = 0;
+                }
+                
+            };
+
+            //read interrupt from OS and load pcb back into ready queue
+            ntrupt_dequeue(&(opSys->interrupts), &temp);
+            
+            //temporary
+            puts("Interrupt");
+
+            transfer = rmPcb(&blockVect, temp.register_one);
+            pcbq_enqueue(&readyQ, &transfer);
+            
+           }
 
 
         //reschedule
