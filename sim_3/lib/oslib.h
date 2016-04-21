@@ -216,8 +216,8 @@ void mysleep(int msec)
 void* runner(void* param)
    {
     //variables
-    ioArgs bundle;
-    int msecWait;
+    ioArgs bundle = (*(ioArgs*) param);
+    int msecWait = bundle.wait;
     interrupt ioComplete;
 
     ntrupt_queue temp;
@@ -226,22 +226,14 @@ void* runner(void* param)
     construct_interrupt(&ioComplete);
     construct_ntrupt_queue(&temp, 10);
 
-    //set up secWait
-    //extract waittime from bundle
-    bundle = (* (ioArgs*) (param));
-    msecWait = bundle.wait;
-
+    
     //call mysleep
     mysleep(msecWait);
     
     //load interrupt and store in queue
     load_interrupt(&ioComplete, bundle.pid, "IO Complete"); //modify to reflect what type of i/o this was
 
-puts("");
-printf("%i", bundle.pid);    
-puts("");
-
-    ntrupt_enqueue(&temp, &ioComplete);
+    ntrupt_enqueue(bundle.interruptQ, &ioComplete);
 
     //throw interrupt signal
     setCheckBus(HIGH);
@@ -644,7 +636,7 @@ void outputHandler(OS* opSys, char* output)
  * @return int sucessful process
  */
 
-int processInstruction(OS* sysNfo, const instruction* pIns, ioArgs *message)
+int processInstruction(OS* sysNfo, instruction* pIns, ioArgs *message)
    {
     //variables
     int pWaitTime = sysNfo->pCycTime;
@@ -653,7 +645,6 @@ int processInstruction(OS* sysNfo, const instruction* pIns, ioArgs *message)
     pthread_attr_t attr;
     
     message->wait = getWaitTime(sysNfo, pIns);
-    message->interruptQ = &(sysNfo->interrupts);    
 
     //make unique sleep thread for IO operations
     if(pIns->component == 'I' || pIns->component == 'O')
@@ -663,11 +654,9 @@ int processInstruction(OS* sysNfo, const instruction* pIns, ioArgs *message)
         pthread_attr_init(&attr);
         
         //create our thread
-        pthread_create(&tid, &attr, runner, message);
+        pthread_create(&tid, &attr, runner,  message);
 
         return BLOCKED;
-        
-    //    pthread_join(tid, NULL);
        
        }
     //processing case
@@ -678,16 +667,35 @@ int processInstruction(OS* sysNfo, const instruction* pIns, ioArgs *message)
        for(waitCycles = 0; waitCycles < pIns->cycles; waitCycles++)
           {
            mysleep(pWaitTime);
+
+           if(waitCycles >= sysNfo->quant)
+              {
+               setCheckBus(HIGH);
+               puts("Interrupt");
+              }
+
+           //handle mid cycle interrupts
+           if(setCheckBus(CHECK) == HIGH)
+              {
+               //subtract processed cycles instruction
+               pIns->cycles = pIns->cycles -  waitCycles; 
+               
+printf("%i", pIns->cycles);
+puts("");
+
+               setCheckBus(LOW);
+               return READY;
+              }
           }
 
       }
     //start and end program case
     else if(pIns->component == 'A')
      {
-      return 1;
+      return -1;
      }   
     
-    return 1;
+    return -1;
    }
 
 
@@ -704,15 +712,14 @@ int processInstruction(OS* sysNfo, const instruction* pIns, ioArgs *message)
  * @param float *runtime  the current runtime of the simulation
  *
  */
-int runPCB(OS* opSys, PCB* loadedPCB, float *runTime)
+int runPCB(OS* opSys, PCB* loadedPCB, float *runTime, ioArgs* ioThreadMsg)
    {
     //variables
     char* formatOut;
     char* timeStr;
-    state_t procState;
+    state_t procState = RUNNING;
     instruction buffer;
     SimpleTimer runTimer;
-    ioArgs ioThreadMsg;
 
     //construct
     constructIns(&buffer);
@@ -720,7 +727,7 @@ int runPCB(OS* opSys, PCB* loadedPCB, float *runTime)
     alloStr(&timeStr ,10);
     
     //load current process id into bundle in case of i/o operations
-    ioThreadMsg.pid = loadedPCB->pid;
+    ioThreadMsg->pid = loadedPCB->pid;
 
     //update PCB state to running
     loadedPCB->pState = RUNNING;
@@ -739,7 +746,7 @@ int runPCB(OS* opSys, PCB* loadedPCB, float *runTime)
 
 
         //process instruction
-        procState = processInstruction(opSys, &buffer, &ioThreadMsg);
+        procState = processInstruction(opSys, &buffer, ioThreadMsg);
        
 
         //end intruction timer
@@ -752,6 +759,15 @@ int runPCB(OS* opSys, PCB* loadedPCB, float *runTime)
         if(procState == BLOCKED)
            {
             return BLOCKED;
+           }
+        
+        else if(procState == READY && buffer.component == 'P')
+           {
+            if(buffer.cycles > 0)
+               {
+                push(&(loadedPCB->instructions), buffer);
+               }
+            return READY;
            }
   
         //log stop instruction if not program

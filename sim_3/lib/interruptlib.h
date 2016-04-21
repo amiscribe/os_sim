@@ -66,9 +66,6 @@ void ntrupt_copy(interrupt* dest, const interrupt* src)
         construct_interrupt(dest);
        }
 
-printf("%i", src->register_one);
-puts("");
-
     dest->register_one = src->register_one;
     strcpy(dest->register_two, src->register_two);
 
