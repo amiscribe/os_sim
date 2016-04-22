@@ -42,6 +42,8 @@ const int BEGIN = 1;
 const int DONE = 0;
 const int SELECTING = 2;
 const int INITIAL = 3;
+const int IDLE = 4;
+
 
 //Function Delarations////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -162,18 +164,19 @@ int runOS(OS* opSys, SimpleTimer* sysTime)
    {
     //variables
     pcbQueue readyQ;
-    pcbQueue blockVect;
+    pcbQueue blockVect;                     //vector containing all blocked processes, organized by PID
     PCB running;
-    PCB transfer;
-    interrupt temp;
+    PCB transfer;                           //temporary PCB used for transfering prcocess out of block vector into ready queue
+    interrupt temp;                         //temporary interrupt variable for transfers
     insQueue q;
     char* elapTime;
     char* outBuff;
     float totalTime = 0.0;
-    state_t processState = NEW;
-    ioArgs* argBundle; 
-
+    state_t processState = NEW;            
+    ioArgs* argBundle;                     //unique arguments for each process to be passed to threads without overwriting
     int argNdx;
+
+    
 
     //constructions
     constructQueue(&q);
@@ -181,36 +184,42 @@ int runOS(OS* opSys, SimpleTimer* sysTime)
     constructPcbQueue(&blockVect, 10);
     alloStr(&elapTime, 10);
     construct_interrupt(&temp);
-    argBundle = (ioArgs*) malloc(10*sizeof(ioArgs));
 
-    //bind global interrupt queue to os int queue
-    for(argNdx = 0; argNdx < 10; argNdx++)
-       {
-        argBundle[argNdx].interruptQ = &(opSys->interrupts);
-       }
+
 
     //output program begin
     getTime(sysTime, &totalTime);
     tellOSStatus(opSys, &totalTime, BEGIN);
 
-    //get and log the time of input operationsgit push to a remote branch
+
+    //get and log the time of input operations
     start(sysTime);
-     
+    
+
     if(!processmdf(opSys, &readyQ))
        {
         puts("Error: Meta Data File Not Found");
         return 0;
        } 
 
+
+
+    //allocate argument bundle array to equal max number of processes    
+    argBundle = (ioArgs*) malloc(readyQ.max * sizeof(ioArgs));
+    
+    //bind specific interrupt queues to "global" os int queue
+    for(argNdx = 0; argNdx < readyQ.max; argNdx++)
+       {
+        argBundle[argNdx].interruptQ = &(opSys->interrupts);
+       }
+
+
     getTime(sysTime, &totalTime);
-    
-    
-    
     tellOSStatus(opSys, &totalTime, INITIAL);
     
     //arrange the queue to be ordered by shortest job
-    //under circumstances of Shortest Job First and Shortest Remaining...
-    if(!strcmp(opSys->schedule, "SJF") || !strcmp(opSys->schedule, "SRTF-N") )
+    //under circumstances of Shortest Remaining Preemptive
+    if(!strcmp(opSys->schedule, "SRTF-P"))
        {
         schedule(opSys, &readyQ, &totalTime);
        }
@@ -218,6 +227,7 @@ int runOS(OS* opSys, SimpleTimer* sysTime)
     
     //output process selection
     tellOSStatus(opSys, &totalTime, SELECTING);
+
 
     start(sysTime);
     
@@ -233,8 +243,6 @@ int runOS(OS* opSys, SimpleTimer* sysTime)
         //if runPCB returns blocked status
         if(processState == BLOCKED)
            {
-            //declare blocked for IO
-            puts("Blocked for IO");                                                  //temporary
 
             //update pcb state to blocked
             running.pState = BLOCKED;
@@ -243,18 +251,34 @@ int runOS(OS* opSys, SimpleTimer* sysTime)
             //organize by pid
             insPcbQ(&blockVect, &running, running.pid);
            }
-        
-        else if(processState == READY)
+
+        //if runPCB returns ready status an interrupt
+        //occured and some PCB is ready to be requeued
+        if(processState == READY)
            {
+            //enquque the presently running process
             pcbq_enqueue(&readyQ, &running);
             
+            //while there are interrupts to process
+            //handle them and dequeue any blocked processes
+            //which have finished thier io
             while(ntrupt_dequeue(&(opSys->interrupts), &temp) != 0)
                {
                 outBuff = format_ntrupt_output(temp, totalTime);
                 outputHandler(opSys, outBuff);
-                
-            //    transfer = rmPcb(&blockVect, temp.register_one);
-             //   pcbq_enqueue(&readyQ, &transfer);
+
+                if(!strcmp(temp.register_two, "IO Complete"))
+                   {
+                    transfer = rmPcb(&blockVect, temp.register_one);
+                    pcbq_enqueue(&readyQ, &transfer);
+                   }
+               }
+             
+            //Reschedule
+            tellOSStatus(opSys, &totalTime, SELECTING);
+            if(!strcmp(opSys->schedule,"SRTF-P"))
+               {
+                schedule(opSys, &readyQ, &totalTime);
                }
             
             setCheckBus(LOW);  
@@ -263,7 +287,8 @@ int runOS(OS* opSys, SimpleTimer* sysTime)
         //case where all processes are blocked
         if(pcbq_isEmpty(&readyQ) && !pcbq_isEmpty(&blockVect))
            {
-            puts("All processes blocked");                                                                //temporary
+            //tell the idle status of cpu
+            tellOSStatus(opSys, &totalTime, IDLE);
            
             start(sysTime);
 
@@ -271,35 +296,30 @@ int runOS(OS* opSys, SimpleTimer* sysTime)
             //reset interrupt bus
             while(setCheckBus(CHECK) != HIGH){};
             
-
             getTime(sysTime, &totalTime);
 
             //read interrupt from OS and load pcb back into ready queue
             while(ntrupt_dequeue(&(opSys->interrupts), &temp) != 0)
                {
+                //output interrupt status
                 outBuff = format_ntrupt_output(temp, totalTime);
                 outputHandler(opSys, outBuff);
-                
+
                 transfer = rmPcb(&blockVect, temp.register_one);
                 pcbq_enqueue(&readyQ, &transfer);
+               
+                //Reschedule
+                tellOSStatus(opSys, &totalTime, SELECTING);
+                if(!strcmp(opSys->schedule,"SRTF-P") )
+                   {
+                    schedule(opSys, &readyQ, &totalTime);
+                   }
                }
             
+            //reset interrupt bus
             setCheckBus(LOW);         
            }
-
-
-        //reschedule
-        if(!pcbq_isEmpty(&readyQ))
-          {
-           tellOSStatus(opSys, &totalTime, SELECTING);
-           
-           //Shortest Remaining Task First
-           if(!strcmp(opSys->schedule,"SRTF-N") )
-              {
-               schedule(opSys, &readyQ, &totalTime);
-              }
-          }
-
+        
         start(sysTime);
        }
 
@@ -319,7 +339,7 @@ void tellOSStatus(OS* opSys, float *runTime, int status)
     char* outBuff; 
 
     //constructions
-    alloStr(&outBuff, 50);
+    alloStr(&outBuff, 70);
     alloStr(&elapTime, 10);
 
 
@@ -342,6 +362,11 @@ void tellOSStatus(OS* opSys, float *runTime, int status)
        {
         strcat(outBuff, " - Simulator Program Ending");
        }
+    else if(status == IDLE)
+       {
+        strcat(outBuff, " - OS: CPU Idle - All Processes Blocked For IO");
+       }
+
 
     outputHandler(opSys, outBuff);
 

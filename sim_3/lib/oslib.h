@@ -537,11 +537,16 @@ char* formatInstruction(int processId, float runTime, const instruction* insNfo,
         strcat(formatBuff, ftoa(runTime));
         strcat(formatBuff, " - Process ");
         strcat(formatBuff, pid);
-        strcat(formatBuff, ": ");
-      
+        strcat(formatBuff, ": ");  
+
         if(start == START)
            {
             strcat(formatBuff, "start ");
+           }
+        else if(start == END && (insNfo->component == 'I' || insNfo->component == 'O'))
+           {
+            
+            strcat(formatBuff, "block for ");
            }
         else  
            {
@@ -630,9 +635,9 @@ void outputHandler(OS* opSys, char* output)
  *
  * @param instruction* pIns the instruction to be processed
  *
- * @param float* runTime the present runtime of the simulation
+ * @param ioArgs* bundle of arguments to be passed to io thread
  *
- * @return int sucessful process
+ * @return int interrupt status, BLOCKED for i/o operations ready for quant interrupts or io finsished
  */
 
 int processInstruction(OS* sysNfo, instruction* pIns, ioArgs *message)
@@ -658,9 +663,10 @@ int processInstruction(OS* sysNfo, instruction* pIns, ioArgs *message)
         //create our thread
         pthread_create(&tid, &attr, runner,  message);
 
-        return BLOCKED;
-       
+        //throw blocked condition back to calling function
+        return BLOCKED;       
        }
+
     //processing case
     else if(pIns->component == 'P') 
       {
@@ -669,7 +675,9 @@ int processInstruction(OS* sysNfo, instruction* pIns, ioArgs *message)
        for(waitCycles = 0; waitCycles < pIns->cycles; waitCycles++)
           {
            mysleep(pWaitTime);
-
+           
+           //throw interrupt if
+           //quant met or exceeded
            if(waitCycles >= sysNfo->quant)
               {
                setCheckBus(HIGH);
@@ -683,6 +691,7 @@ int processInstruction(OS* sysNfo, instruction* pIns, ioArgs *message)
  
 
                //load interrupt and store in queue
+               //for later handling by OS
                load_interrupt(&quantUp, message->pid, "Quant Time Up");
                ntrupt_enqueue(&(sysNfo->interrupts), &quantUp);
 
@@ -712,6 +721,10 @@ int processInstruction(OS* sysNfo, instruction* pIns, ioArgs *message)
  * @param PCB* loadedPCB  the PCB loaded and run by the OS 
  *
  * @param float *runtime  the current runtime of the simulation
+ *
+ * @param ioArgs* ioThreadMsg an array of bundled arguments each process passes to it's own IO thread
+ *
+ * @return int if a process is BLOCKED or requires some action from the OS for interrupt
  *
  */
 int runPCB(OS* opSys, PCB* loadedPCB, float *runTime, ioArgs* ioThreadMsg)
@@ -761,12 +774,21 @@ int runPCB(OS* opSys, PCB* loadedPCB, float *runTime, ioArgs* ioThreadMsg)
         *runTime += atof(timeStr);
         timeStr = ftoa(*runTime);
         
-
+        //if the instruction threw a blocked command
+        //due to io output condition and throw BLOCKED
         if(procState == BLOCKED)
            {
+            formatOut = formatInstruction(loadedPCB->pid, *runTime, &buffer, END);
+            if(formatOut != NULL)
+               {
+                outputHandler(opSys, formatOut);
+               }
+
             return BLOCKED;
            }
         
+        //if instruction processing was interrupted due to
+        //io completion or quant time
         else if(procState == READY && buffer.component == 'P')
            {
             if(buffer.cycles > 0)
@@ -774,19 +796,18 @@ int runPCB(OS* opSys, PCB* loadedPCB, float *runTime, ioArgs* ioThreadMsg)
                 push(&(loadedPCB->instructions), buffer);
                }
 
-
             return READY;
            }
   
-        //log stop instruction if not program
-        // start end notification
+        //log stop instruction
         formatOut = formatInstruction(loadedPCB->pid, *runTime, &buffer, END);
-        
         if(formatOut != NULL)
            {
             outputHandler(opSys, formatOut);
            }
+
        }
+
     return TERMINATED;
   }
 
