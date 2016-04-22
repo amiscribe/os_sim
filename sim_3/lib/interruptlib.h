@@ -1,5 +1,7 @@
 #include "stdlib.h"
+#include "stdio.h"
 #include "string.h"
+#include "stringlib.h"
 
 #ifndef INTERRUPTLIB_H 
 #define INTERRUPTLIB_H
@@ -173,5 +175,33 @@ int ntrupt_dequeue(ntrupt_queue *self, interrupt* dest)
     return 1;
   
    }
+
+char* format_ntrupt_output(interrupt ntrupt, float time)
+      {
+       //variables
+       char* formatBuff;
+       char* pid;
+       char* timeStamp;
+       
+       //construct
+       alloStr(&formatBuff, 100);
+       alloStr(&pid, 5);
+       alloStr(&timeStamp, 10);
+
+       sprintf(pid, "%d", ntrupt.register_one);
+       sprintf(timeStamp, "%f", time);
+       
+       strcat(formatBuff, timeStamp);
+       strcat(formatBuff, " - Interrupt: ");
+
+       strcat(formatBuff, "Process "); 
+       strcat(formatBuff, pid);
+
+       strcat(formatBuff, " - ");
+
+       strcat(formatBuff, ntrupt.register_two);
+
+       return formatBuff;
+      }
 
 #endif

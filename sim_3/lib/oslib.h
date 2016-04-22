@@ -232,7 +232,6 @@ void* runner(void* param)
     
     //load interrupt and store in queue
     load_interrupt(&ioComplete, bundle.pid, "IO Complete"); //modify to reflect what type of i/o this was
-
     ntrupt_enqueue(bundle.interruptQ, &ioComplete);
 
     //throw interrupt signal
@@ -643,7 +642,10 @@ int processInstruction(OS* sysNfo, instruction* pIns, ioArgs *message)
     int waitCycles;
     pthread_t tid;
     pthread_attr_t attr;
+    interrupt quantUp;
     
+    //assign and construct
+    construct_interrupt(&quantUp);
     message->wait = getWaitTime(sysNfo, pIns);
 
     //make unique sleep thread for IO operations
@@ -671,7 +673,6 @@ int processInstruction(OS* sysNfo, instruction* pIns, ioArgs *message)
            if(waitCycles >= sysNfo->quant)
               {
                setCheckBus(HIGH);
-               puts("Interrupt");
               }
 
            //handle mid cycle interrupts
@@ -679,11 +680,12 @@ int processInstruction(OS* sysNfo, instruction* pIns, ioArgs *message)
               {
                //subtract processed cycles instruction
                pIns->cycles = pIns->cycles -  waitCycles; 
-               
-printf("%i", pIns->cycles);
-puts("");
+ 
 
-               setCheckBus(LOW);
+               //load interrupt and store in queue
+               load_interrupt(&quantUp, message->pid, "Quant Time Up");
+               ntrupt_enqueue(&(sysNfo->interrupts), &quantUp);
+
                return READY;
               }
           }
@@ -720,6 +722,8 @@ int runPCB(OS* opSys, PCB* loadedPCB, float *runTime, ioArgs* ioThreadMsg)
     state_t procState = RUNNING;
     instruction buffer;
     SimpleTimer runTimer;
+    int pid = loadedPCB->pid;
+    interrupt cpuInterrupt;
 
     //construct
     constructIns(&buffer);
@@ -727,7 +731,7 @@ int runPCB(OS* opSys, PCB* loadedPCB, float *runTime, ioArgs* ioThreadMsg)
     alloStr(&timeStr ,10);
     
     //load current process id into bundle in case of i/o operations
-    ioThreadMsg->pid = loadedPCB->pid;
+    ioThreadMsg[pid].pid = pid;
 
     //update PCB state to running
     loadedPCB->pState = RUNNING;
@@ -744,9 +748,11 @@ int runPCB(OS* opSys, PCB* loadedPCB, float *runTime, ioArgs* ioThreadMsg)
         //instruction timer 
         start(&runTimer);
 
+        //load current process id into bundle in case of i/o operations
+        ioThreadMsg->pid = loadedPCB->pid;
 
         //process instruction
-        procState = processInstruction(opSys, &buffer, ioThreadMsg);
+        procState = processInstruction(opSys, &buffer, &ioThreadMsg[pid]);
        
 
         //end intruction timer
@@ -767,6 +773,8 @@ int runPCB(OS* opSys, PCB* loadedPCB, float *runTime, ioArgs* ioThreadMsg)
                {
                 push(&(loadedPCB->instructions), buffer);
                }
+
+
             return READY;
            }
   

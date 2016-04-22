@@ -168,10 +168,12 @@ int runOS(OS* opSys, SimpleTimer* sysTime)
     interrupt temp;
     insQueue q;
     char* elapTime;
+    char* outBuff;
     float totalTime = 0.0;
     state_t processState = NEW;
-    ioArgs argBundle; 
+    ioArgs* argBundle; 
 
+    int argNdx;
 
     //constructions
     constructQueue(&q);
@@ -179,9 +181,13 @@ int runOS(OS* opSys, SimpleTimer* sysTime)
     constructPcbQueue(&blockVect, 10);
     alloStr(&elapTime, 10);
     construct_interrupt(&temp);
+    argBundle = (ioArgs*) malloc(10*sizeof(ioArgs));
 
     //bind global interrupt queue to os int queue
-    argBundle.interruptQ = &(opSys->interrupts);
+    for(argNdx = 0; argNdx < 10; argNdx++)
+       {
+        argBundle[argNdx].interruptQ = &(opSys->interrupts);
+       }
 
     //output program begin
     getTime(sysTime, &totalTime);
@@ -221,7 +227,7 @@ int runOS(OS* opSys, SimpleTimer* sysTime)
        {
         getTime(sysTime, &totalTime);
         
-        processState = runPCB(opSys, &running, &totalTime, &argBundle);
+        processState = runPCB(opSys, &running, &totalTime, argBundle);
         
 
         //if runPCB returns blocked status
@@ -241,6 +247,17 @@ int runOS(OS* opSys, SimpleTimer* sysTime)
         else if(processState == READY)
            {
             pcbq_enqueue(&readyQ, &running);
+            
+            while(ntrupt_dequeue(&(opSys->interrupts), &temp) != 0)
+               {
+                outBuff = format_ntrupt_output(temp, totalTime);
+                outputHandler(opSys, outBuff);
+                
+            //    transfer = rmPcb(&blockVect, temp.register_one);
+             //   pcbq_enqueue(&readyQ, &transfer);
+               }
+            
+            setCheckBus(LOW);  
            }
         
         //case where all processes are blocked
@@ -253,20 +270,21 @@ int runOS(OS* opSys, SimpleTimer* sysTime)
             //sleep until interrupt comes
             //reset interrupt bus
             while(setCheckBus(CHECK) != HIGH){};
-            setCheckBus(LOW);         
             
-            //temporary
-            puts("Interrupt");
 
             getTime(sysTime, &totalTime);
 
             //read interrupt from OS and load pcb back into ready queue
-            ntrupt_dequeue(&(opSys->interrupts), &temp);
+            while(ntrupt_dequeue(&(opSys->interrupts), &temp) != 0)
+               {
+                outBuff = format_ntrupt_output(temp, totalTime);
+                outputHandler(opSys, outBuff);
+                
+                transfer = rmPcb(&blockVect, temp.register_one);
+                pcbq_enqueue(&readyQ, &transfer);
+               }
             
-
-            transfer = rmPcb(&blockVect, temp.register_one);
-            pcbq_enqueue(&readyQ, &transfer);
-            
+            setCheckBus(LOW);         
            }
 
 
